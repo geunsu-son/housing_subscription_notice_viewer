@@ -1,7 +1,8 @@
 import streamlit as st
 import pandas as pd
-import requests
 import numpy as np
+import requests
+import math
 import streamlit.components.v1 as components
 
 st.set_page_config(
@@ -77,9 +78,9 @@ with col2:
     매입유형 = st.multiselect('매입유형', options=sorted(df['매입유형'].unique().tolist()), default=sorted(df['매입유형'].unique().tolist()))
 
 with col3:
-    min_area, max_area = round(float(df['전용면적(m2)'].min()), 0), round(float(df['전용면적(m2)'].max()), 0)
+    min_area, max_area = float(math.floor(df['전용면적(m2)'].min())), float(math.ceil(df['전용면적(m2)'].max()))
     area_range = st.slider('전용면적(m2) 범위', min_value=min_area, max_value=max_area, value=(min_area, max_area), step=0.1)
-    min_deposit, max_deposit = round(int(df['임대보증금액'].min()), -6), round(int(df['임대보증금액'].max()), -6)
+    min_deposit, max_deposit = math.floor(int(df['임대보증금액'].min())/10000000)*10000000, math.ceil(int(df['임대보증금액'].max())/10000000)*10000000
     deposit_range = st.slider('임대보증금액 범위(원)', min_value=min_deposit, max_value=max_deposit, value=(min_deposit, max_deposit), step=10000000)
 
 st.divider()
