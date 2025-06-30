@@ -3,7 +3,6 @@ import pandas as pd
 import numpy as np
 import requests
 import math
-import streamlit.components.v1 as components
 
 st.set_page_config(
     page_title="HUG 든든전세주택 뷰어",
@@ -11,27 +10,6 @@ st.set_page_config(
     layout="wide",
     initial_sidebar_state="collapsed",
 )
-
-# Google Analytics tracking code
-GA_TRACKING_CODE = """
-<!-- Google tag (gtag.js) -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-24TZHQ6Y49"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
-
-  gtag('config', 'G-24TZHQ6Y49');
-</script>
-"""
-
-# Google Search Console verification meta tag
-GSC_VERIFICATION_META_TAG = """
-<meta name="google-site-verification" content="hA5Z8T9H4JpXgiH69j3LkKS5wtCLdUtT72R7oZekObc">
-"""
-
-# Insert GA tracking code in the app
-components.html(GA_TRACKING_CODE + GSC_VERIFICATION_META_TAG, height=0, width=0)
 
 with st.sidebar:
     st.write(
