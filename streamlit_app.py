@@ -32,12 +32,13 @@ st.write(
 st.divider()
 
 @st.cache_data
-def get_file_list():
-    file_list = os.listdir('source/')
-    return file_list
+def get_file_dict():
+    file_dict = os.listdir('source/')
+    file_dict = {' '.join(file.split(' ')[1:]):file for file in file_dict}
+    return file_dict
 
-file_list = get_file_list()
-file_name = st.selectbox('파일 선택', options=file_list)
+file_dict = get_file_dict()
+file_name = st.selectbox('파일 선택', options=file_dict.keys())
 
 
 # 파일 컬럼: 시도, 시군구, 주소, 전용면적, 주택유형, 주택구조(방수), 
@@ -56,30 +57,47 @@ def load_data(file_name):
     df['월임대료'] = df['월임대료'].astype(str).str.replace(',', '').str.replace('"', '').astype(np.int64)
     df['전용면적'] = df['전용면적'].astype(float)
     df['네이버지도'] = df['주소'].apply(lambda x: f'https://map.naver.com/p/search/{x}')
-    return df.sort_values(by=['시도','시군구','주소'])
 
-df = load_data(file_name)
+    if '공급계' in df.columns:
+        show_cols = ['공급구분','시도','시군구','주소','단지명', '공급구분1','공급구분2','공급계','공급_우선','공급_일반','공급_예비']
+        filter_cols = ['공급구분1','공급구분2']
+    elif '매입유형' in df.columns:
+        show_cols = ['시도','시군구','주소','주택유형', '매입유형']
+        filter_cols = ['주택유형','매입유형']
+    else:
+        show_cols = ['시도','시군구','주소','주택유형', '주택구조(방수)']
+        filter_cols = ['주택유형','주택구조(방수)']
+    
+    show_cols = show_cols + ['전용면적', '보증금', '월임대료', '네이버지도']
+    
+    return df.sort_values(by=['시도','시군구','주소']), show_cols, filter_cols
+
+df, show_cols, filter_cols = load_data(file_dict[file_name])
 
 st.header('필터')
 col1, col2, col3 = st.columns(3, gap='medium')
 with col1:
     시도 = st.selectbox('시도', options=['전체']+sorted(df['시도'].unique().tolist()), index=0)
     시도 = df['시도'].unique() if 시도 == '전체' else [시도]
-    시군구 = st.selectbox('시군구', options=['전체']+sorted(df[df['시도'].isin(시도)]['시군구'].unique().tolist()), index=0)
-    시군구 = df[df['시도'].isin(시도)]['시군구'].unique() if 시군구 == '전체' else [시군구]
+
+    시군구_list = df[df['시도'].isin(시도)]['시군구'].unique().tolist()
+    if len(시군구_list) == 1:
+        시군구 = 시군구_list
+    else:
+        시군구 = st.multiselect('시군구', options=sorted(시군구_list), default=sorted(시군구_list))
 
 with col2:
-    주택유형_list = df['주택유형'].unique().tolist()
-    if len(주택유형_list) == 1:
-        주택유형 = 주택유형_list
+    filter_col1_list = df[filter_cols[0]].unique().tolist()
+    if len(filter_col1_list) == 1:
+        filter_col1 = filter_col1_list
     else:
-        주택유형 = st.multiselect('주택유형', options=sorted(주택유형_list), default=sorted(주택유형_list))
+        filter_col1 = st.multiselect(filter_cols[0], options=sorted(filter_col1_list), default=sorted(filter_col1_list))
 
-    주택구조_list = df['주택구조(방수)'].unique().tolist()
-    if len(주택구조_list) == 1:
-        주택구조 = 주택구조_list
+    filter_col2_list = df[filter_cols[1]].unique().tolist()
+    if len(filter_col2_list) == 1:
+        filter_col2 = filter_col2_list
     else:
-        주택구조 = st.multiselect('주택구조(방수)', options=sorted(주택구조_list), default=sorted(주택구조_list))
+        filter_col2 = st.multiselect(filter_cols[1], options=sorted(filter_col2_list), default=sorted(filter_col2_list))
 
 with col3:
     min_area, max_area = float(math.floor(df['전용면적'].min())), float(math.ceil(df['전용면적'].max()))
@@ -89,15 +107,12 @@ with col3:
 
 st.divider()
 
-show_cols = [
-    '시도', '시군구', '주소', '주택유형', '주택구조(방수)',
-    '전용면적', '보증금', '월임대료', '네이버지도'
-]
+
 filtered_df = df[
     df['시도'].isin(시도) &
     df['시군구'].isin(시군구) &
-    df['주택유형'].isin(주택유형) &
-    df['주택구조(방수)'].isin(주택구조) &
+    df[filter_cols[0]].isin(filter_col1) &
+    df[filter_cols[1]].isin(filter_col2) &
     (df['전용면적'] >= area_range[0]) & (df['전용면적'] <= area_range[1]) &
     (df['보증금'] >= deposit_range[0]) & (df['보증금'] <= deposit_range[1])
 ][show_cols]
@@ -109,7 +124,7 @@ for col in show_cols:
 
 filter_toggle = st.toggle('주소 중복제거')
 if filter_toggle:
-    filter_columns = [col for col in ['시도','시군구','주소','주택유형','주택구조(방수)'] if col in filtered_df.columns]
+    filter_columns = [col for col in ['시도','시군구','주소']+filter_cols if col in filtered_df.columns]
     filter_values = [col for col in ['전용면적','보증금','월임대료'] if col in filtered_df.columns]
 
     filtered_df_grouped_count = filtered_df.groupby(filter_columns).agg({filter_values[0]: 'count'}).reset_index()
