@@ -1,8 +1,9 @@
 import streamlit as st
 import pandas as pd
 import numpy as np
-import requests
+import openpyxl
 import math
+import os
 
 st.set_page_config(
     page_title="HUG 든든전세주택 뷰어",
@@ -23,25 +24,41 @@ with st.sidebar:
 
 st.write(
     """
-## HUG 든든전세주택 뷰어
-HUG 든든전세주택 리스트를 확인하는게 불편해서 직접 만들었습니다.
-* 데이터 출처: [안심전세포털](https://www.khug.or.kr/jeonse/web/s07/s070102.jsp)
-* 신청자 수 업데이트는 아직 미구현
-* 협의매입형은 '소유자와의 협의를 통해 매입하는' 유형입니다. (임대의무기간(최초 임대개시일로부터 5년) 이후 임대인이 변경될 수 있음)
+## 임대주택 공고 뷰어
+* HUG, LH, SH에 올라온 공고 중 확인했던 공고를 지도까지 손쉽게 확인하기 위해 제작했습니다.
 """ 
 )
 
 st.divider()
 
 @st.cache_data
-def load_data():
-    df = pd.read_csv('rent_house_list.csv')
-    df['임대보증금액'] = df['임대보증금액'].astype(str).str.replace(',', '').str.replace('"', '').astype(np.int64)
-    df['전용면적(m2)'] = df['전용면적(m2)'].astype(float)
-    return df
+def get_file_list():
+    file_list = os.listdir('source/')
+    return file_list
 
-df = load_data()
+file_list = get_file_list()
+file_name = st.selectbox('파일 선택', options=file_list)
 
+
+# 파일 컬럼: 시도, 시군구, 주소, 전용면적, 주택유형, 주택구조(방수), 
+@st.cache_data
+def load_data(file_name):
+    if '.csv' in file_name:
+        df = pd.read_csv(f'source/{file_name}')
+    elif '.xls' in file_name or '.xlsx' in file_name:
+        df = pd.read_excel(f'source/{file_name}')
+    else:
+        st.error('지원하지 않는 파일 형식입니다.')
+        return None
+
+    df['주소'] = df['주소'].astype(str).str.strip()
+    df['보증금'] = df['보증금'].astype(str).str.replace(',', '').str.replace('"', '').astype(np.int64)
+    df['월임대료'] = df['월임대료'].astype(str).str.replace(',', '').str.replace('"', '').astype(np.int64)
+    df['전용면적'] = df['전용면적'].astype(float)
+    df['네이버지도'] = df['주소'].apply(lambda x: f'https://map.naver.com/p/search/{x}')
+    return df.sort_values(by=['시도','시군구','주소'])
+
+df = load_data(file_name)
 
 st.header('필터')
 col1, col2, col3 = st.columns(3, gap='medium')
@@ -52,45 +69,69 @@ with col1:
     시군구 = df[df['시도'].isin(시도)]['시군구'].unique() if 시군구 == '전체' else [시군구]
 
 with col2:
-    주택유형 = st.multiselect('주택유형', options=sorted(df['주택유형'].unique().tolist()), default=sorted(df['주택유형'].unique().tolist()))
-    매입유형 = st.multiselect('매입유형', options=sorted(df['매입유형'].unique().tolist()), default=sorted(df['매입유형'].unique().tolist()))
+    주택유형_list = df['주택유형'].unique().tolist()
+    if len(주택유형_list) == 1:
+        주택유형 = 주택유형_list
+    else:
+        주택유형 = st.multiselect('주택유형', options=sorted(주택유형_list), default=sorted(주택유형_list))
+
+    주택구조_list = df['주택구조(방수)'].unique().tolist()
+    if len(주택구조_list) == 1:
+        주택구조 = 주택구조_list
+    else:
+        주택구조 = st.multiselect('주택구조(방수)', options=sorted(주택구조_list), default=sorted(주택구조_list))
 
 with col3:
-    min_area, max_area = float(math.floor(df['전용면적(m2)'].min())), float(math.ceil(df['전용면적(m2)'].max()))
-    area_range = st.slider('전용면적(m2) 범위', min_value=min_area, max_value=max_area, value=(min_area, max_area), step=0.1)
-    min_deposit, max_deposit = math.floor(int(df['임대보증금액'].min())/10000000)*10000000, math.ceil(int(df['임대보증금액'].max())/10000000)*10000000
-    deposit_range = st.slider('임대보증금액 범위(원)', min_value=min_deposit, max_value=max_deposit, value=(min_deposit, max_deposit), step=10000000)
+    min_area, max_area = float(math.floor(df['전용면적'].min())), float(math.ceil(df['전용면적'].max()))
+    area_range = st.slider('전용면적 범위', min_value=min_area, max_value=max_area, value=(min_area, max_area), step=0.1)
+    min_deposit, max_deposit = math.floor(int(df['보증금'].min())/10000000)*10000000, math.ceil(int(df['보증금'].max())/10000000)*10000000
+    deposit_range = st.slider('보증금 범위(원)', min_value=min_deposit, max_value=max_deposit, value=(min_deposit, max_deposit), step=10000000)
 
 st.divider()
 
+show_cols = [
+    '시도', '시군구', '주소', '주택유형', '주택구조(방수)',
+    '전용면적', '보증금', '월임대료', '네이버지도'
+]
 filtered_df = df[
     df['시도'].isin(시도) &
     df['시군구'].isin(시군구) &
     df['주택유형'].isin(주택유형) &
-    df['매입유형'].isin(매입유형) &
-    (df['전용면적(m2)'] >= area_range[0]) & (df['전용면적(m2)'] <= area_range[1]) &
-    (df['임대보증금액'] >= deposit_range[0]) & (df['임대보증금액'] <= deposit_range[1])
-]
+    df['주택구조(방수)'].isin(주택구조) &
+    (df['전용면적'] >= area_range[0]) & (df['전용면적'] <= area_range[1]) &
+    (df['보증금'] >= deposit_range[0]) & (df['보증금'] <= deposit_range[1])
+][show_cols]
 
-# 표에 하이퍼링크 컬럼 추가 및 숫자 포맷 컬럼 생성
-filtered_df = filtered_df.copy()
-filtered_df['전용면적(㎡)'] = filtered_df['전용면적(m2)'].apply(lambda x: f"{x:.1f} ㎡")
-filtered_df['안심전세포털'] = filtered_df['안심전세포털']
-filtered_df['네이버지도'] = filtered_df['네이버지도']
+for col in show_cols:
+    if len(filtered_df[col].unique()) == 1:
+        filtered_df.drop(columns=[col], inplace=True)
+        show_cols.remove(col)
 
-show_cols = [
-    '시도', '시군구', '주소', '주택유형', '매입유형',
-    '전용면적(㎡)', '임대보증금액', '안심전세포털', '네이버지도'
-]
+filter_toggle = st.toggle('주소 중복제거')
+if filter_toggle:
+    filter_columns = [col for col in ['시도','시군구','주소','주택유형','주택구조(방수)'] if col in filtered_df.columns]
+    filter_values = [col for col in ['전용면적','보증금','월임대료'] if col in filtered_df.columns]
+
+    filtered_df_grouped_count = filtered_df.groupby(filter_columns).agg({filter_values[0]: 'count'}).reset_index()
+    filtered_df_grouped_count.rename(columns={filter_values[0]: '주택수'}, inplace=True)
+
+    filtered_df_grouped_min = filtered_df.groupby(filter_columns).agg({col: 'min' for col in filter_values}).reset_index()
+    filtered_df_grouped_max = filtered_df.groupby(filter_columns).agg({col: 'max' for col in filter_values}).reset_index()
+    filtered_df_grouped_merged = filtered_df_grouped_count.merge(filtered_df_grouped_min, on=filter_columns, how='left').merge(filtered_df_grouped_max, on=filter_columns, how='left')
+
+    for value in filter_values:
+        filtered_df_grouped_merged[value] = filtered_df_grouped_merged.apply(lambda x: f'{x[f"{value}_x"]} ~ {x[f"{value}_y"]}' if x[f"{value}_x"] != x[f"{value}_y"] else f'{x[f"{value}_x"]}', axis=1)
+        filtered_df_grouped_merged.drop(columns={f'{value}_x',f'{value}_y'}, inplace=True)
+    filtered_df_grouped_merged['네이버지도'] = filtered_df_grouped_merged['주소'].apply(lambda x: f'https://map.naver.com/p/search/{x}')
+
+    filtered_df = filtered_df_grouped_merged.copy()
 
 st.write('### 주택 리스트 조회 (총 {}건)'.format(len(filtered_df)))
 st.data_editor(
-    filtered_df[show_cols],
+    filtered_df,
     column_config={
-        '안심전세포털': st.column_config.LinkColumn('안심전세포털', display_text='공고 바로가기'),
         '네이버지도': st.column_config.LinkColumn('네이버지도', display_text='지도로 보기'),
     },
     hide_index=True,
     use_container_width=True,
 )
-
