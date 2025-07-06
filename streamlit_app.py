@@ -24,21 +24,35 @@ with st.sidebar:
 
 st.write(
     """
-## 청약 공고 뷰어
-* HUG, LH, SH에 올라온 청약 공고 중 확인했던 공고를 지도까지 손쉽게 확인하기 위해 제작했습니다.
+### 청약 공고 뷰어
+HUG, LH, SH에 올라온 청약 공고 중 확인했던 공고를 지도까지 손쉽게 확인하기 위해 제작했습니다.
 """ 
 )
 
 st.divider()
 
 @st.cache_data
-def get_file_dict():
+def get_file_df():
     file_dict = os.listdir('source/')
-    file_dict = {' '.join(file.split(' ')[1:]):file for file in file_dict}
-    return file_dict
+    dataframe = pd.DataFrame(columns=['연도','주택공사','청약 공고','파일명'])
+    for file in file_dict:
+        year = file.split('.')[0]
+        dataframe.loc[len(dataframe)] = [year, file.split(' ')[1], ' '.join(file.split(' ')[2:]), file]
+    return dataframe
 
-file_dict = get_file_dict()
-file_name = st.selectbox('파일 선택', options=file_dict.keys())
+file_df = get_file_df()
+page_col1, page_col2 = st.columns([0.25,0.75], gap='medium')
+with page_col1:
+    st.warning('##### 청약 공고 조회')
+    year = st.selectbox('연도', options=file_df['연도'].unique().tolist())
+    if file_df[file_df['연도'] == year].empty:
+        st.error('해당 연도의 청약 공고가 없습니다.')
+        st.stop()
+    else:
+        company_name = st.selectbox('주택공사', options=file_df[file_df['연도'] == year]['주택공사'].unique().tolist())
+    notice_name = st.selectbox('청약 공고', options=file_df[(file_df['연도'] == year) & (file_df['주택공사'] == company_name)]['청약 공고'].unique().tolist())
+
+    file_name = file_df[(file_df['연도'] == year) & (file_df['주택공사'] == company_name) & (file_df['청약 공고'] == notice_name)]['파일명'].values[0]
 
 
 # 파일 컬럼: 시도, 시군구, 주소, 전용면적, 주택유형, 주택구조(방수), 
@@ -72,38 +86,35 @@ def load_data(file_name):
     
     return df.sort_values(by=['시도','시군구','주소']), show_cols, filter_cols
 
-df, show_cols, filter_cols = load_data(file_dict[file_name])
+df, show_cols, filter_cols = load_data(file_name)
 
-st.header('필터')
-col1, col2, col3 = st.columns(3, gap='medium')
-with col1:
-    시도 = st.selectbox('시도', options=['전체']+sorted(df['시도'].unique().tolist()), index=0)
-    시도 = df['시도'].unique() if 시도 == '전체' else [시도]
+with page_col2:
+    st.error('##### 필터')
+    col1, col2, col3 = st.columns(3, gap='medium')
+    with col1:
+        시도 = st.selectbox('시도', options=['전체']+sorted(df['시도'].unique().tolist()), index=0)
+        시도 = df['시도'].unique() if 시도 == '전체' else [시도]
+        시군구 = st.selectbox('시군구', options=['전체']+sorted(df[df['시도'].isin(시도)]['시군구'].unique().tolist()), index=0)
+        시군구 = df[df['시도'].isin(시도)]['시군구'].unique() if 시군구 == '전체' else [시군구]
 
-    시군구_list = df[df['시도'].isin(시도)]['시군구'].unique().tolist()
-    if len(시군구_list) == 1:
-        시군구 = 시군구_list
-    else:
-        시군구 = st.multiselect('시군구', options=sorted(시군구_list), default=sorted(시군구_list))
+    with col2:
+        filter_col1_list = df[filter_cols[0]].unique().tolist()
+        if len(filter_col1_list) == 1:
+            filter_col1 = filter_col1_list
+        else:
+            filter_col1 = st.multiselect(filter_cols[0], options=sorted(filter_col1_list), default=sorted(filter_col1_list))
 
-with col2:
-    filter_col1_list = df[filter_cols[0]].unique().tolist()
-    if len(filter_col1_list) == 1:
-        filter_col1 = filter_col1_list
-    else:
-        filter_col1 = st.multiselect(filter_cols[0], options=sorted(filter_col1_list), default=sorted(filter_col1_list))
+        filter_col2_list = df[filter_cols[1]].unique().tolist()
+        if len(filter_col2_list) == 1:
+            filter_col2 = filter_col2_list
+        else:
+            filter_col2 = st.multiselect(filter_cols[1], options=sorted(filter_col2_list), default=sorted(filter_col2_list))
 
-    filter_col2_list = df[filter_cols[1]].unique().tolist()
-    if len(filter_col2_list) == 1:
-        filter_col2 = filter_col2_list
-    else:
-        filter_col2 = st.multiselect(filter_cols[1], options=sorted(filter_col2_list), default=sorted(filter_col2_list))
-
-with col3:
-    min_area, max_area = float(math.floor(df['전용면적'].min())), float(math.ceil(df['전용면적'].max()))
-    area_range = st.slider('전용면적 범위', min_value=min_area, max_value=max_area, value=(min_area, max_area), step=0.1)
-    min_deposit, max_deposit = math.floor(int(df['보증금'].min())/10000000)*10000000, math.ceil(int(df['보증금'].max())/10000000)*10000000
-    deposit_range = st.slider('보증금 범위(원)', min_value=min_deposit, max_value=max_deposit, value=(min_deposit, max_deposit), step=10000000)
+    with col3:
+        min_area, max_area = float(math.floor(df['전용면적'].min())), float(math.ceil(df['전용면적'].max()))
+        area_range = st.slider('전용면적 범위', min_value=min_area, max_value=max_area, value=(min_area, max_area), step=0.1)
+        min_deposit, max_deposit = math.floor(int(df['보증금'].min())/10000000)*10000000, math.ceil(int(df['보증금'].max())/10000000)*10000000
+        deposit_range = st.slider('보증금 범위(원)', min_value=min_deposit, max_value=max_deposit, value=(min_deposit, max_deposit), step=10000000)
 
 st.divider()
 
