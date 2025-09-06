@@ -128,10 +128,12 @@ filtered_df = df[
     (df['보증금'] >= deposit_range[0]) & (df['보증금'] <= deposit_range[1])
 ][show_cols]
 
+
+filtered_df['전용면적(평)'] = filtered_df['전용면적'].apply(lambda x: f'{str(x/3.305785)[:2]}평') 
 filtered_df['보증금(억원)'] = filtered_df['보증금'].apply(lambda x: f'{str(int(x/100000000))+'억' if x >= 100000000 else ''}{' '+str(int(x/10000%10000))+'만원' if int(x/10000%10000) > 0 else '원'}') 
 if '월임대료' in filtered_df.columns:
     filtered_df['월임대료(만원)'] = filtered_df['월임대료'].apply(lambda x: f'{str(int(x/10000))+'만' if x >= 10000 else ''}{' '+str(int(x%10000))+'원' if int(x%10000) > 0 else '원'}') 
-filtered_df = filtered_df[show_cols[:-1]+['보증금(억원)','월임대료(만원)' if '월임대료' in filtered_df.columns else '','네이버지도']]
+filtered_df = filtered_df[show_cols[:-1]+['전용면적(평)','보증금(억원)','월임대료(만원)' if '월임대료' in filtered_df.columns else '','네이버지도']]
 
 for col in show_cols:
     if len(filtered_df[col].unique()) == 1:
