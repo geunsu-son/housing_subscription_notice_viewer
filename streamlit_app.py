@@ -128,6 +128,11 @@ filtered_df = df[
     (df['보증금'] >= deposit_range[0]) & (df['보증금'] <= deposit_range[1])
 ][show_cols]
 
+filtered_df['보증금(억원)'] = filtered_df['보증금'].apply(lambda x: f'{str(int(x/100000000))+'억' if x >= 100000000 else ''}{' '+str(int(x/10000%10000))+'만원' if int(x/10000%10000) > 0 else '원'}') 
+if '월임대료' in filtered_df.columns:
+    filtered_df['월임대료(만원)'] = filtered_df['월임대료'].apply(lambda x: f'{str(int(x/10000))+'만' if x >= 10000 else ''}{' '+str(int(x%10000))+'원' if int(x%10000) > 0 else '원'}') 
+filtered_df = filtered_df[show_cols[:-1]+['보증금(억원)','월임대료(만원)' if '월임대료' in filtered_df.columns else '','네이버지도']]
+
 for col in show_cols:
     if len(filtered_df[col].unique()) == 1:
         filtered_df.drop(columns=[col], inplace=True)
@@ -135,7 +140,7 @@ for col in show_cols:
 
 filter_toggle = st.toggle('주소 중복제거')
 if filter_toggle:
-    filter_columns = [col for col in ['시도','시군구','주소']+filter_cols if col in filtered_df.columns]
+    filter_columns = [col for col in ['시도','시군구','주소','주택명']+filter_cols if col in filtered_df.columns]
     filter_values = [col for col in ['전용면적','보증금','월임대료'] if col in filtered_df.columns]
 
     filtered_df_grouped_count = filtered_df.groupby(filter_columns).agg({filter_values[0]: 'count'}).reset_index()
