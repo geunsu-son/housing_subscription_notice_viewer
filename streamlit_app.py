@@ -129,7 +129,7 @@ filtered_df = df[
 ][show_cols]
 
 
-filtered_df['전용면적(평)'] = filtered_df['전용면적'].apply(lambda x: f'{str(x/3.305785)[:2]}평') 
+filtered_df['전용면적(평)'] = filtered_df['전용면적'].apply(lambda x: f'{int(x/3.305785)}평' if x % 3.305785 == 0 else f'{x/3.305785:.1f}평')
 filtered_df['보증금(억원)'] = filtered_df['보증금'].apply(lambda x: f'{str(int(x/100000000))+'억' if x >= 100000000 else ''}{' '+str(int(x/10000%10000))+'만원' if int(x/10000%10000) > 0 else '원'}') 
 if '월임대료' in filtered_df.columns:
     filtered_df['월임대료(만원)'] = filtered_df['월임대료'].apply(lambda x: f'{str(int(x/10000))+'만' if x >= 10000 else ''}{' '+str(int(x%10000))+'원' if int(x%10000) > 0 else '원'}') 
