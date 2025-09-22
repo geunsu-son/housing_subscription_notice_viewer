@@ -68,7 +68,8 @@ def load_data(file_name):
 
     df['주소'] = df['주소'].astype(str).str.strip()
     df['보증금'] = df['보증금'].astype(str).str.replace(',', '').str.replace('"', '').astype(np.int64)
-    df['월임대료'] = df['월임대료'].astype(str).str.replace(',', '').str.replace('"', '').astype(np.int64)
+    if '월임대료' in df.columns:
+        df['월임대료'] = df['월임대료'].astype(str).str.replace(',', '').str.replace('"', '').astype(np.int64)
     df['전용면적'] = df['전용면적'].astype(float)
     df['네이버지도'] = df['주소'].apply(lambda x: f'https://map.naver.com/p/search/{x}')
 
@@ -76,13 +77,13 @@ def load_data(file_name):
         show_cols = ['공급구분','시도','시군구','주소','단지명', '공급구분1','공급구분2','공급계','공급_우선','공급_일반','공급_예비']
         filter_cols = ['공급구분1','공급구분2']
     elif '매입유형' in df.columns:
-        show_cols = ['시도','시군구','주소','주택유형', '매입유형']
+        show_cols = [col for col in ['시도','시군구', '주택명','주소', '주택유형', '매입유형','안심전세포털'] if col in df.columns]
         filter_cols = ['주택유형','매입유형']
     else:
         show_cols = [col for col in ['시도','시군구','주택명','주택군','주소','주택유형', '주택구조(방수)'] if col in df.columns]
         filter_cols = ['주택유형','주택구조(방수)']
     
-    show_cols = show_cols + ['전용면적', '보증금', '월임대료', '네이버지도']
+    show_cols = show_cols + [col for col in ['전용면적', '보증금', '월임대료', '네이버지도'] if col in df.columns]
     
     return df.sort_values(by=['시도','시군구','주소']), show_cols, filter_cols
 
@@ -131,9 +132,10 @@ filtered_df = df[
 
 filtered_df['전용면적(평)'] = filtered_df['전용면적'].apply(lambda x: f'{int(x/3.305785)}평' if x % 3.305785 == 0 else f'{x/3.305785:.1f}평')
 filtered_df['보증금(억원)'] = filtered_df['보증금'].apply(lambda x: f'{str(int(x/100000000))+'억' if x >= 100000000 else ''}{' '+str(int(x/10000%10000))+'만원' if int(x/10000%10000) > 0 else '원'}') 
+add_show_cols = ['전용면적(평)','보증금(억원)','월임대료(만원)','네이버지도'] if '월임대료' in filtered_df.columns else ['전용면적(평)','보증금(억원)','네이버지도']
 if '월임대료' in filtered_df.columns:
     filtered_df['월임대료(만원)'] = filtered_df['월임대료'].apply(lambda x: f'{str(int(x/10000))+'만' if x >= 10000 else ''}{' '+str(int(x%10000))+'원' if int(x%10000) > 0 else '원'}') 
-filtered_df = filtered_df[show_cols[:-1]+['전용면적(평)','보증금(억원)','월임대료(만원)' if '월임대료' in filtered_df.columns else '','네이버지도']]
+filtered_df = filtered_df[show_cols[:-1]+add_show_cols]
 
 for col in show_cols:
     if len(filtered_df[col].unique()) == 1:
@@ -160,11 +162,16 @@ if filter_toggle:
     filtered_df = filtered_df_grouped_merged.copy()
 
 st.write('### 주택 리스트 조회 (총 {}건)'.format(len(filtered_df)))
+
+config_dict = {
+    '네이버지도': st.column_config.LinkColumn('네이버지도', display_text='지도로 보기'),
+}
+if '안심전세포털' in filtered_df.columns:
+    config_dict['안심전세포털'] = st.column_config.LinkColumn('안심전세포털', display_text='안심전세포털로 보기')
+
 st.data_editor(
     filtered_df,
-    column_config={
-        '네이버지도': st.column_config.LinkColumn('네이버지도', display_text='지도로 보기'),
-    },
+    column_config=config_dict,
     hide_index=True,
     use_container_width=True,
 )
