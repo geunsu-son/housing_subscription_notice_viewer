@@ -81,7 +81,12 @@ def load_data(file_name):
         filter_cols = ['주택유형','매입유형']
     else:
         show_cols = [col for col in ['시도','시군구','주택명','주택군','주소','주택유형', '주택구조(방수)'] if col in df.columns]
-        filter_cols = ['주택유형','주택구조(방수)']
+        if '주택구조(방수)' in df.columns:
+            filter_cols = ['주택유형','주택구조(방수)']
+        elif '공급형' in df.columns:
+            filter_cols = ['주택유형','공급형']
+        else:
+            raise ValueError('주택구조(방수) 또는 공급형이 없습니다.')
     
     show_cols = show_cols + [col for col in ['전용면적', '보증금', '월임대료', '네이버지도'] if col in df.columns]
     
