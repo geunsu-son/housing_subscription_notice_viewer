@@ -1,0 +1,114 @@
+{
+  "notices": [
+    {
+      "id": "2025.06.25-HUG-25년2분기-든든전세주택",
+      "year": "2025",
+      "company": "HUG",
+      "title": "25년2분기 든든전세주택",
+      "sourceFile": "2025.06.25 HUG 25년2분기 든든전세주택.xlsx",
+      "dataFile": "data/2025.06.25-HUG-25년2분기-든든전세주택.json",
+      "kind": "hug",
+      "rowCount": 600
+    },
+    {
+      "id": "2025.07.07-LH-25년2차_신혼·신생아매입임대Ⅱ(전세형)_서울",
+      "year": "2025",
+      "company": "LH",
+      "title": "25년2차_신혼·신생아매입임대Ⅱ(전세형)_서울",
+      "sourceFile": "2025.07.07 LH 25년2차_신혼·신생아매입임대Ⅱ(전세형)_서울.xlsx",
+      "dataFile": "data/2025.07.07-LH-25년2차_신혼·신생아매입임대Ⅱ(전세형)_서울.json",
+      "kind": "standard",
+      "rowCount": 95
+    },
+    {
+      "id": "2025.07.11-SH-25년-2차-행복주택",
+      "year": "2025",
+      "company": "SH",
+      "title": "25년 2차 행복주택",
+      "sourceFile": "2025.07.11 SH 25년 2차 행복주택.xlsx",
+      "dataFile": "data/2025.07.11-SH-25년-2차-행복주택.json",
+      "kind": "sh_supply",
+      "rowCount": 127
+    },
+    {
+      "id": "2025.07.21-SH-25년-1차-청년-매입임대주택",
+      "year": "2025",
+      "company": "SH",
+      "title": "25년 1차 청년 매입임대주택",
+      "sourceFile": "2025.07.21 SH 25년 1차 청년 매입임대주택.xlsx",
+      "dataFile": "data/2025.07.21-SH-25년-1차-청년-매입임대주택.json",
+      "kind": "standard",
+      "rowCount": 751
+    },
+    {
+      "id": "2025.09.19-HUG-25년3분기-든든전세주택",
+      "year": "2025",
+      "company": "HUG",
+      "title": "25년3분기 든든전세주택",
+      "sourceFile": "2025.09.19 HUG 25년3분기 든든전세주택.xlsx",
+      "dataFile": "data/2025.09.19-HUG-25년3분기-든든전세주택.json",
+      "kind": "hug",
+      "rowCount": 700
+    },
+    {
+      "id": "2025.09.22-LH-25년3차_신혼·신생아매입임대Ⅱ(전세형)_서울",
+      "year": "2025",
+      "company": "LH",
+      "title": "25년3차_신혼·신생아매입임대Ⅱ(전세형)_서울",
+      "sourceFile": "2025.09.22 LH 25년3차_신혼·신생아매입임대Ⅱ(전세형)_서울.xlsx",
+      "dataFile": "data/2025.09.22-LH-25년3차_신혼·신생아매입임대Ⅱ(전세형)_서울.json",
+      "kind": "standard",
+      "rowCount": 73
+    },
+    {
+      "id": "2025.09.22-LH-25년3차_청년매입임대",
+      "year": "2025",
+      "company": "LH",
+      "title": "25년3차_청년매입임대",
+      "sourceFile": "2025.09.22 LH 25년3차_청년매입임대.xlsx",
+      "dataFile": "data/2025.09.22-LH-25년3차_청년매입임대.json",
+      "kind": "standard",
+      "rowCount": 520
+    },
+    {
+      "id": "2025.09.23-SH-25년-2차-장기매임대-매입임대주택",
+      "year": "2025",
+      "company": "SH",
+      "title": "25년 2차 장기매임대 매입임대주택",
+      "sourceFile": "2025.09.23 SH 25년 2차 장기매임대 매입임대주택.xlsx",
+      "dataFile": "data/2025.09.23-SH-25년-2차-장기매임대-매입임대주택.json",
+      "kind": "standard",
+      "rowCount": 101
+    },
+    {
+      "id": "2025.10.27-LH-25년2차-든든전세-매입임대-(인천,부천)",
+      "year": "2025",
+      "company": "LH",
+      "title": "25년2차 든든전세 매입임대 (인천,부천)",
+      "sourceFile": "2025.10.27 LH 25년2차 든든전세 매입임대 (인천,부천).xlsx",
+      "dataFile": "data/2025.10.27-LH-25년2차-든든전세-매입임대-(인천,부천).json",
+      "kind": "standard",
+      "rowCount": 72
+    },
+    {
+      "id": "2025.11.03-LH-25년2차-비분양전환형-든든전세주택",
+      "year": "2025",
+      "company": "LH",
+      "title": "25년2차 비분양전환형 든든전세주택",
+      "sourceFile": "2025.11.03 LH 25년2차 비분양전환형 든든전세주택.xlsx",
+      "dataFile": "data/2025.11.03-LH-25년2차-비분양전환형-든든전세주택.json",
+      "kind": "standard",
+      "rowCount": 40
+    },
+    {
+      "id": "2025.12.10-SH-25년-3차-장기매임대-매입임대주택",
+      "year": "2025",
+      "company": "SH",
+      "title": "25년 3차 장기매임대 매입임대주택",
+      "sourceFile": "2025.12.10 SH 25년 3차 장기매임대 매입임대주택.xlsx",
+      "dataFile": "data/2025.12.10-SH-25년-3차-장기매임대-매입임대주택.json",
+      "kind": "standard",
+      "rowCount": 92
+    }
+  ]
+}

@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>청약 공고 뷰어</title>
+    <link
+      rel="icon"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%8F%A0%3C/text%3E%3C/svg%3E"
+    />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <header class="page-header">
+      <h1>청약 공고 뷰어</h1>
+      <p>
+        HUG, LH, SH에 올라온 청약 공고 중 확인했던 공고를 지도까지 손쉽게 확인하기 위해
+        제작했습니다.
+      </p>
+    </header>
+
+    <main>
+      <section class="panel-row">
+        <section class="panel panel-notice" aria-labelledby="notice-heading">
+          <h2 id="notice-heading">청약 공고 조회</h2>
+          <label>
+            연도
+            <select id="year-select"></select>
+          </label>
+          <label>
+            주택공사
+            <select id="company-select"></select>
+          </label>
+          <label>
+            청약 공고
+            <select id="notice-select"></select>
+          </label>
+        </section>
+
+        <section class="panel panel-filter" aria-labelledby="filter-heading">
+          <h2 id="filter-heading">필터</h2>
+          <div class="filter-grid">
+            <div class="filter-col">
+              <label>
+                시도
+                <select id="sido-select"></select>
+              </label>
+              <label>
+                시군구
+                <select id="sigungu-select"></select>
+              </label>
+            </div>
+            <div class="filter-col" id="type-filters"></div>
+            <div class="filter-col">
+              <div class="range-block">
+                <span class="range-label">전용면적 범위</span>
+                <div class="range-values" id="area-values"></div>
+                <input id="area-min" type="range" step="0.1" />
+                <input id="area-max" type="range" step="0.1" />
+              </div>
+              <div class="range-block">
+                <span class="range-label">보증금 범위(원)</span>
+                <div class="range-values" id="deposit-values"></div>
+                <input id="deposit-min" type="range" step="10000000" />
+                <input id="deposit-max" type="range" step="10000000" />
+              </div>
+            </div>
+          </div>
+        </section>
+      </section>
+
+      <p id="status" class="status" hidden></p>
+
+      <label class="dedup-toggle">
+        <input id="dedup-toggle" type="checkbox" />
+        주소 중복제거
+      </label>
+
+      <h2 id="result-heading">주택 리스트 조회 (총 0건)</h2>
+      <div class="table-wrap">
+        <table id="result-table">
+          <thead></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </main>
+
+    <footer>
+      <h2>연락처</h2>
+      <p>Tel. 010-4430-2279</p>
+      <p>E-mail. <a href="mailto:gnsu0705@gmail.com">gnsu0705@gmail.com</a></p>
+      <p>Blog. <a href="https://super-son.tistory.com" target="_blank" rel="noopener noreferrer">Super-Son</a></p>
+    </footer>
+
+    <script src="app.js"></script>
+  </body>
+</html>
