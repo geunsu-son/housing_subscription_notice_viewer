@@ -1,3 +1,6 @@
 name = "housing-subscription-notice-viewer"
 compatibility_date = "2026-08-26"
-pages_build_output_dir = "web"
+
+# Cloudflare 대시보드 배포 명령 `npx wrangler deploy`가 web/ 정적 파일을 올리도록 한다.
+[assets]
+directory = "./web"
