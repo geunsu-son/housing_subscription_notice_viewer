@@ -43,7 +43,20 @@ python scripts/crawl_lh.py --lookback-days 90 --max-new 20
 - 이미 `scripts/lh-crawl-state.json`에 있는 공고는 건너뜁니다.
 - GitHub Actions `Crawl LH rental notices`가 매주 월요일 07:00 KST에 같은 명령을 돌리고, 새 데이터가 있으면 커밋합니다.
 
-SH 자동 수집은 아직 넣지 않았습니다.
+### SH 매입임대 자동 수집
+
+SH [주택임대 공고](https://www.i-sh.co.kr/main/lay2/program/S1T297C4476/www/brd/m_247/list.do?multi_itm_seq=2)에서 **매입임대·미리내집·장기미임대** 모집공고의 주택목록 엑셀만 가져옵니다.
+
+```bash
+python -m pip install -r scripts/requirements.txt
+python scripts/crawl_sh.py --lookback-days 90 --max-new 20
+```
+
+- 목록·상세는 게시판 HTML, 첨부는 상세 페이지의 `downList`와 `innoFD.do`를 사용합니다.
+- 최근 공고는 주택목록을 PDF만 올리는 경우가 많습니다. 엑셀(`xlsx`/`xls`)이 없거나, `[주택목록] 엑셀파일 (링크).txt` 웹하드 링크가 아니면 건너뜁니다.
+- 공고문 PDF/HWP와 도면·사진 파일은 받지 않습니다.
+- 이미 `scripts/sh-crawl-state.json`에 있는 공고는 건너뜁니다.
+- GitHub Actions `Crawl SH rental notices`가 매주 월요일 07:30 KST에 같은 명령을 돌리고, 새 데이터가 있으면 커밋합니다.
 
 ## Cloudflare 배포
 
@@ -67,4 +80,6 @@ Pages만 쓰는 경우에는 배포 명령을 `npx wrangler pages deploy web`으
 | `web/` | 정적 사이트 (배포 대상) |
 | `scripts/crawl_lh.py` | LH 매입임대 주택목록 수집 |
 | `scripts/lh-crawl-state.json` | 이미 가져온 LH 공고 ID |
+| `scripts/crawl_sh.py` | SH 매입임대 주택목록 수집 |
+| `scripts/sh-crawl-state.json` | 이미 가져온 SH 공고 ID |
 | `crawling_rent_house_list.ipynb` | 공고 수집 노트북 (사이트와 별개) |

@@ -71,6 +71,8 @@ SIDO_NAMES = [
 HEADER_ALIASES = {
     "주소": "주소",
     "도로명주소": "주소",
+    "소재지주소": "주소",
+    "소재지": "주소",
     "동": "동",
     "동번호": "동",
     "호": "호",
@@ -80,6 +82,8 @@ HEADER_ALIASES = {
     "방수": "주택구조(방수)",
     "주택구조(방수)": "주택구조(방수)",
     "주택구조방수": "주택구조(방수)",
+    "주택구조": "주택구조(방수)",
+    "주택명": "주택명",
     "층수": "층수",
     "주택유형": "주택유형",
     "주택군": "주택군",
@@ -89,6 +93,7 @@ HEADER_ALIASES = {
     "시도": "시도",
     "광역지자체": "시도",
     "시군구": "시군구",
+    "자치구": "시군구",
     "기초지자체": "시군구",
     "지자체": "시군구",
     "지자체명": "시군구",
@@ -232,9 +237,9 @@ def map_header(name: str) -> str | None:
         return HEADER_ALIASES[name]
     if "전용" in name and "면적" in name:
         return "전용면적"
-    if "임대보증금" in name and "상한" not in name and "최대" not in name:
+    if "보증금" in name and "상한" not in name and "최대" not in name:
         return "보증금"
-    if "월임대료" in name and "하한" not in name and "최대" not in name:
+    if ("월임대료" in name or name.endswith("임대료")) and "하한" not in name and "최대" not in name:
         return "월임대료"
     return None
 
@@ -304,6 +309,7 @@ def normalize_housing_table(rows: list[list[Any]]) -> pd.DataFrame:
             "보증금": int(deposit),
         }
         optional = {
+            "주택명": "주택명",
             "주택군": "주택군",
             "주택유형": "주택유형",
             "주택구조(방수)": "주택구조(방수)",

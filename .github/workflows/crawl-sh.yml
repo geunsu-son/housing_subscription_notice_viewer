@@ -1,0 +1,60 @@
+name: Crawl SH rental notices
+
+on:
+  schedule:
+    - cron: "30 22 * * 0"
+  workflow_dispatch:
+  pull_request:
+
+concurrency:
+  group: crawl-sh-${{ github.event_name }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: python -m pip install -r scripts/requirements.txt
+
+      - name: Test SH crawler parsers
+        run: python scripts/test_crawl_sh.py
+
+  crawl:
+    if: github.event_name != 'pull_request'
+    needs: test
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: python -m pip install -r scripts/requirements.txt
+
+      - name: Fetch new SH 매입임대 housing lists
+        run: python scripts/crawl_sh.py --lookback-days 90 --max-new 20
+
+      - name: Commit data if changed
+        run: |
+          git add source scripts/sh-crawl-state.json web/data
+          if git diff --staged --quiet; then
+            echo "No new SH notices."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "Add latest SH 매입임대 housing lists."
+          git push
