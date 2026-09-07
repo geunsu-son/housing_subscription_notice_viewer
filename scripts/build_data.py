@@ -99,9 +99,13 @@ def classify_and_columns(df: pd.DataFrame) -> tuple[str, list[str], list[str]]:
             if col in df.columns
         ]
         if "주택구조(방수)" in df.columns:
-            filter_cols = ["주택유형", "주택구조(방수)"]
+            filter_cols = ["주택구조(방수)"]
+            if "주택유형" in df.columns:
+                filter_cols = ["주택유형", "주택구조(방수)"]
         elif "공급형" in df.columns:
-            filter_cols = ["주택유형", "공급형"]
+            filter_cols = ["공급형"]
+            if "주택유형" in df.columns:
+                filter_cols = ["주택유형", "공급형"]
         else:
             raise ValueError("주택구조(방수) 또는 공급형이 없습니다.")
 
