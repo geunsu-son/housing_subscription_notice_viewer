@@ -41,7 +41,7 @@ python scripts/crawl_lh.py --lookback-days 90 --max-new 20
 - 목록은 사이트 HTML, 첨부 목록은 `wrtFileDownl.do` JSON을 사용합니다.
 - 공고문 PDF/HWP는 받지 않고, 파일명에 `주택목록`·`주택내역`이 있는 엑셀만 받습니다.
 - 이미 `scripts/lh-crawl-state.json`에 있는 공고는 건너뜁니다.
-- GitHub Actions `Crawl LH rental notices`가 매일 07:00 KST에 같은 명령을 돌리고, 새 데이터가 있으면 커밋합니다.
+- GitHub Actions `Crawl LH rental notices`가 매주 월요일 07:00 KST에 같은 명령을 돌리고, 새 데이터가 있으면 커밋합니다.
 
 SH 자동 수집은 아직 넣지 않았습니다.
 
