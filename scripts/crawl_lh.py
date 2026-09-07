@@ -258,7 +258,7 @@ def to_number(value: Any) -> Any:
         return None
     if isinstance(value, (int, float)):
         return value
-    text = str(value).replace(",", "").replace("원", "").strip()
+    text = re.sub(r"\s+", "", str(value).replace(",", "").replace("원", ""))
     if not text or text.lower() == "nan":
         return None
     try:

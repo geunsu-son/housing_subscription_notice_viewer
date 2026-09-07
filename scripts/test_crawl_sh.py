@@ -12,10 +12,11 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 from openpyxl import Workbook
 
-from crawl_lh import normalize_housing_excel
+from crawl_lh import normalize_housing_excel, normalize_housing_table, to_number
 from crawl_sh import (
     is_excel_link_note,
     is_housing_excel,
+    is_housing_pdf,
     is_recruit_housing_notice,
     notice_filename,
     parse_down_list,
@@ -109,6 +110,22 @@ class AttachmentTests(unittest.TestCase):
         assert chosen is not None
         self.assertEqual(chosen["fileSeq"], "5")
 
+    def test_housing_pdf_fallback(self) -> None:
+        self.assertTrue(is_housing_pdf("2_ [주택목록] 2026년 1차 청년 매입임대(홈페이지 공개용).pdf"))
+        self.assertFalse(is_housing_pdf("1_ [공고문] 모집공고문.pdf"))
+        self.assertFalse(is_housing_pdf("[첨부] 도면 및 사진(링크).pdf"))
+        files = [
+            {"oriFileNm": "1_ [공고문] 모집공고문.pdf", "fileSeq": "1"},
+            {
+                "oriFileNm": "2_ [주택목록] 2026년 1차 청년 매입임대(홈페이지 공개용).pdf",
+                "fileSeq": "6",
+            },
+        ]
+        chosen = pick_housing_attachment(files)
+        self.assertIsNotNone(chosen)
+        assert chosen is not None
+        self.assertEqual(chosen["fileSeq"], "6")
+
 
 class NormalizeExcelTests(unittest.TestCase):
     def test_notice_filename(self) -> None:
@@ -147,6 +164,27 @@ class NormalizeExcelTests(unittest.TestCase):
         self.assertEqual(frame.iloc[0]["보증금"], 1_000_000)
         self.assertEqual(frame.iloc[0]["주택명"], "희망")
         self.assertEqual(frame.iloc[0]["주택구조(방수)"], "개방형원룸")
+
+    def test_pdf_table_rows_with_spaced_money(self) -> None:
+        self.assertEqual(to_number("1 ,000,000"), 1_000_000)
+        self.assertEqual(to_number("3 15,600"), 315_600)
+        rows = [
+            ["번호", "자치구", "소재지 주소", "전용면적(㎡)", "임대보증금(원)", "월임대료(원)"],
+            [
+                "1",
+                "강동구",
+                "서울특별시 강동구 양재대로95길 36-9",
+                "32.49",
+                "1 ,000,000",
+                "3 15,600",
+            ],
+        ]
+        frame = normalize_housing_table(rows)
+        self.assertEqual(len(frame), 1)
+        self.assertEqual(frame.iloc[0]["시도"], "서울특별시")
+        self.assertEqual(frame.iloc[0]["시군구"], "강동구")
+        self.assertEqual(frame.iloc[0]["보증금"], 1_000_000)
+        self.assertEqual(frame.iloc[0]["월임대료"], 315_600)
 
 
 if __name__ == "__main__":

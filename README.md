@@ -53,8 +53,9 @@ python scripts/crawl_sh.py --lookback-days 90 --max-new 20
 ```
 
 - 목록·상세는 게시판 HTML, 첨부는 상세 페이지의 `downList`와 `innoFD.do`를 사용합니다.
-- 최근 공고는 주택목록을 PDF만 올리는 경우가 많습니다. 엑셀(`xlsx`/`xls`)이 없거나, `[주택목록] 엑셀파일 (링크).txt` 웹하드 링크가 아니면 건너뜁니다.
-- 공고문 PDF/HWP와 도면·사진 파일은 받지 않습니다.
+- 주택목록은 엑셀(`xlsx`/`xls`), `[주택목록] 엑셀파일 (링크).txt` 웹하드 링크, 또는 **텍스트 표가 들어 있는 주택목록 PDF**에서 가져옵니다.
+- 2026년 공고처럼 엑셀 없이 PDF만 있는 경우가 있습니다. 표에서 주소·전용면적·보증금을 읽습니다.
+- 한글 CID 폰트로 글자가 깨지는 PDF, 팸플릿·단지 집계표, 공고문 PDF/HWP, 도면·사진 파일은 건너뜁니다.
 - 이미 `scripts/sh-crawl-state.json`에 있는 공고는 건너뜁니다.
 - GitHub Actions `Crawl SH rental notices`가 매주 월요일 07:30 KST에 같은 명령을 돌리고, 새 데이터가 있으면 커밋합니다.
 

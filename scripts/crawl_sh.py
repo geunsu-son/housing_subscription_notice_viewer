@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-"""SH 주택임대 게시판에서 매입임대 주택목록 엑셀을 수집해 source/에 추가한다.
+"""SH 주택임대 게시판에서 매입임대 주택목록을 수집해 source/에 추가한다.
 
-수집 경로: 목록 HTML POST → 상세 HTML의 downList → xlsx/xls 또는 웹하드 링크 txt.
+수집 경로: 목록 HTML POST → 상세 HTML의 downList → xlsx/xls, 웹하드 링크 txt, 또는 주택목록 PDF.
 공고문 PDF/HWP와 도면·사진 파일은 받지 않는다.
-최근 공고는 주택목록을 PDF만 올리는 경우가 있어, 엑셀이 없으면 건너뛴다.
+주택목록 PDF는 텍스트 표만 추출한다. CID 폰트로 한글이 깨지거나 단지 집계/팸플릿이면 건너뛴다.
 """
 
 from __future__ import annotations
@@ -27,6 +27,7 @@ from crawl_lh import (  # noqa: E402
     BUILD_SCRIPT,
     SOURCE_DIR,
     normalize_housing_excel,
+    normalize_housing_table,
     write_source_excel,
 )
 
@@ -61,6 +62,7 @@ SKIP_TITLE_RE = re.compile(
 )
 KEEP_TITLE_RE = re.compile(r"(매입임대|미리내집|장기미임대|장기매임대)")
 WEBHARD_RE = re.compile(r"https?://webhard\.i-sh\.co\.kr[^\s<>\"']+", re.I)
+SKIP_STATUSES = {"no-housing-list", "pdf-parse-failed"}
 
 
 def notice_filename(posted_on: str, title: str) -> str:
@@ -134,13 +136,58 @@ def is_excel_link_note(name: str) -> bool:
     return lowered.endswith(".txt") and "엑셀" in name and "링크" in name
 
 
+def is_housing_pdf(name: str) -> bool:
+    lowered = name.lower()
+    if not lowered.endswith(".pdf"):
+        return False
+    if SKIP_FILE_RE.search(name) and "주택목록" not in name:
+        return False
+    return bool(HOUSING_NAME_RE.search(name))
+
+
 def pick_housing_attachment(files: list[dict[str, Any]]) -> dict[str, Any] | None:
     excel = [item for item in files if is_housing_excel(str(item.get("oriFileNm") or ""))]
     if excel:
         posted = [item for item in excel if "공개용" in str(item.get("oriFileNm") or "")]
         return (posted or excel)[0]
     notes = [item for item in files if is_excel_link_note(str(item.get("oriFileNm") or ""))]
-    return notes[0] if notes else None
+    if notes:
+        return notes[0]
+    pdfs = [item for item in files if is_housing_pdf(str(item.get("oriFileNm") or ""))]
+    if pdfs:
+        posted = [item for item in pdfs if "공개용" in str(item.get("oriFileNm") or "")]
+        return (posted or pdfs)[0]
+    return None
+
+
+def _clean_pdf_cell(cell: Any) -> str | None:
+    if cell is None:
+        return None
+    text = str(cell).replace("\n", " ").replace("\xa0", " ")
+    text = re.sub(r" +", " ", text).strip()
+    return text or None
+
+
+def extract_pdf_rows(path: Path) -> list[list[Any]]:
+    import pdfplumber
+
+    rows: list[list[Any]] = []
+    with pdfplumber.open(path) as pdf:
+        if not pdf.pages:
+            raise ValueError("빈 PDF입니다.")
+        for page in pdf.pages:
+            for table in page.extract_tables() or []:
+                for row in table:
+                    rows.append([_clean_pdf_cell(cell) for cell in row])
+    if not rows:
+        raise ValueError("PDF에서 표를 찾지 못했습니다.")
+    return rows
+
+
+def is_done_notice(entry: dict[str, Any]) -> bool:
+    if entry.get("source_file"):
+        return True
+    return entry.get("status") in SKIP_STATUSES
 
 
 def parse_webhard_url(text: str) -> str | None:
@@ -361,7 +408,7 @@ def run(argv: list[str] | None = None) -> int:
     failed = 0
     for notice in notices:
         seq = notice["seq"]
-        if seq in seen:
+        if is_done_notice(seen.get(seq) or {}):
             skipped += 1
             continue
         if added >= args.max_new:
@@ -373,11 +420,11 @@ def run(argv: list[str] | None = None) -> int:
             attachment = pick_housing_attachment(files)
             if attachment is None:
                 names = [str(item.get("oriFileNm") or "") for item in files]
-                print(f"[건너뜀] 주택목록 엑셀 없음 {notice['title'][:60]} files={names[:5]}")
+                print(f"[건너뜀] 주택목록 파일 없음 {notice['title'][:60]} files={names[:5]}")
                 seen[seq] = {
                     "title": notice["title"],
                     "posted_on": notice["posted_on"],
-                    "status": "no-housing-excel",
+                    "status": "no-housing-list",
                     "files": names[:8],
                     "fetched_at": datetime.now().isoformat(timespec="seconds"),
                 }
@@ -390,22 +437,36 @@ def run(argv: list[str] | None = None) -> int:
                 continue
 
             tmp_path = Path("/tmp") / f"sh-{seq}.bin"
-            excel_path = Path("/tmp") / f"sh-{seq}.xlsx"
-            if not excel_path.is_file() or excel_path.stat().st_size < 100:
-                client.download_attachment(seq, attachment.get("fileSeq"), tmp_path)
-                if is_excel_link_note(filename_orig):
-                    link = parse_webhard_url(tmp_path.read_text(encoding="utf-8", errors="replace"))
-                    if not link:
-                        raise ValueError("엑셀 링크 txt에서 웹하드 URL을 찾지 못했습니다.")
-                    client.download_webhard(link, excel_path)
-                else:
-                    tmp_path.replace(excel_path)
-            if excel_path.stat().st_size < 100:
-                raise ValueError("다운로드한 파일이 비어 있습니다.")
-            magic = excel_path.read_bytes()[:8]
-            if magic[:2] != b"PK" and magic[:4] != b"\xd0\xcf\x11\xe0":
-                raise ValueError("엑셀이 아닌 파일을 받았습니다.")
-            frame = normalize_housing_excel(excel_path)
+            client.download_attachment(seq, attachment.get("fileSeq"), tmp_path)
+            if is_excel_link_note(filename_orig):
+                link = parse_webhard_url(tmp_path.read_text(encoding="utf-8", errors="replace"))
+                if not link:
+                    raise ValueError("엑셀 링크 txt에서 웹하드 URL을 찾지 못했습니다.")
+                excel_path = Path("/tmp") / f"sh-{seq}.xlsx"
+                client.download_webhard(link, excel_path)
+                frame = normalize_housing_excel(excel_path)
+            elif filename_orig.lower().endswith(".pdf"):
+                if tmp_path.read_bytes()[:4] != b"%PDF":
+                    raise ValueError("PDF가 아닌 파일을 받았습니다.")
+                try:
+                    frame = normalize_housing_table(extract_pdf_rows(tmp_path))
+                except ValueError as exc:
+                    print(f"[건너뜀] PDF 표 추출 실패 {notice['title'][:60]}: {exc}")
+                    seen[seq] = {
+                        "title": notice["title"],
+                        "posted_on": notice["posted_on"],
+                        "status": "pdf-parse-failed",
+                        "file": filename_orig,
+                        "error": str(exc),
+                        "fetched_at": datetime.now().isoformat(timespec="seconds"),
+                    }
+                    skipped += 1
+                    continue
+            else:
+                magic = tmp_path.read_bytes()[:8]
+                if magic[:2] != b"PK" and magic[:4] != b"\xd0\xcf\x11\xe0":
+                    raise ValueError("엑셀이 아닌 파일을 받았습니다.")
+                frame = normalize_housing_excel(tmp_path)
             frame = finish_seoul(frame)
             filename = notice_filename(notice["posted_on"], notice["title"])
             dest = SOURCE_DIR / filename
