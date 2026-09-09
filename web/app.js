@@ -153,8 +153,8 @@ function renderNoticeDetail(notice) {
   noticeDetailEl.innerHTML = noticeDetailHtml(notice);
 }
 
-function formatApplyPeriod(notice) {
-  const applyStart = notice.applyStart || notice.postedOn;
+function formatApplyPeriod(notice, { fallbackPostedOn = true } = {}) {
+  const applyStart = notice.applyStart || (fallbackPostedOn ? notice.postedOn : "");
   if (!applyStart && !notice.applyEnd) return "";
   return `${formatDateLabel(applyStart)} ~ ${formatDateLabel(notice.applyEnd)}`;
 }
@@ -167,18 +167,15 @@ function renderNoticeBoard(list) {
   }
 
   for (const notice of list) {
-    const status = computeScheduleStatus(notice);
     const button = document.createElement("button");
     button.type = "button";
     button.className = "notice-board-item";
     button.dataset.id = notice.id;
     button.setAttribute("role", "option");
     button.innerHTML = `
-      <span class="schedule-badge status-${status}">${status}</span>
       <span class="notice-board-company">${escapeHtml(notice.company || "")}</span>
       <span class="notice-board-region">${escapeHtml(notice.regions || "")}</span>
-      <span class="notice-board-date">${formatDateLabel(notice.postedOn)}</span>
-      <span class="notice-board-period">${escapeHtml(formatApplyPeriod(notice))}</span>
+      <span class="notice-board-period">${escapeHtml(formatApplyPeriod(notice, { fallbackPostedOn: false }))}</span>
       <span class="notice-board-title">${escapeHtml(notice.title)}</span>
     `;
     button.addEventListener("click", () => openNotice(notice.id));

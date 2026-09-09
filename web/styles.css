@@ -207,7 +207,7 @@ select {
 .notice-board-head,
 .notice-board-item {
   display: grid;
-  grid-template-columns: 4.5rem 3rem minmax(5.5rem, 1fr) 5rem minmax(9rem, 1.1fr) minmax(0, 1.6fr);
+  grid-template-columns: 3rem minmax(5.5rem, 1fr) minmax(9rem, 1.1fr) minmax(0, 1.6fr);
   gap: 0.5rem;
   align-items: start;
   padding: 0.55rem 0.65rem;
@@ -250,12 +250,6 @@ select {
   box-shadow: inset 3px 0 0 #d97706;
 }
 
-.notice-board-item .schedule-badge {
-  margin-top: 0.1rem;
-  justify-self: start;
-}
-
-.notice-board-date,
 .notice-board-company,
 .notice-board-period {
   font-size: 0.8rem;
