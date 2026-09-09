@@ -5,14 +5,10 @@ const yearSelect = document.getElementById("year-select");
 const companySelect = document.getElementById("company-select");
 const noticeBoardList = document.getElementById("notice-board-list");
 const noticeDetailEl = document.getElementById("notice-detail");
-const housingNoticeSummaryEl = document.getElementById("housing-notice-summary");
 const viewBoard = document.getElementById("view-board");
-const viewNotice = document.getElementById("view-notice");
-const viewHousing = document.getElementById("view-housing");
+const viewDetail = document.getElementById("view-detail");
 const appNav = document.getElementById("app-nav");
 const backToBoardBtn = document.getElementById("back-to-board");
-const backToNoticeBtn = document.getElementById("back-to-notice");
-const openHousingBtn = document.getElementById("open-housing-btn");
 const sidoSelect = document.getElementById("sido-select");
 const sigunguSelect = document.getElementById("sigungu-select");
 const typeFilters = document.getElementById("type-filters");
@@ -161,19 +157,6 @@ function renderNoticeDetail(notice) {
   noticeDetailEl.innerHTML = noticeDetailHtml(notice);
 }
 
-function renderHousingSummary(notice) {
-  if (!notice) {
-    housingNoticeSummaryEl.innerHTML = "";
-    return;
-  }
-  const status = computeScheduleStatus(notice);
-  housingNoticeSummaryEl.innerHTML = `
-    <span class="schedule-badge status-${status}">${status}</span>
-    <span class="housing-summary-title">${escapeHtml(notice.title)}</span>
-    <span class="housing-summary-meta">공고일 ${formatDateLabel(notice.postedOn)} · ${Number(notice.rowCount || 0).toLocaleString("ko-KR")}건</span>
-  `;
-}
-
 function renderNoticeBoard(list) {
   noticeBoardList.innerHTML = "";
   if (!list.length) {
@@ -183,6 +166,7 @@ function renderNoticeBoard(list) {
 
   for (const notice of list) {
     const status = computeScheduleStatus(notice);
+    const applyStart = notice.applyStart || notice.postedOn;
     const button = document.createElement("button");
     button.type = "button";
     button.className = "notice-board-item";
@@ -191,6 +175,9 @@ function renderNoticeBoard(list) {
     button.innerHTML = `
       <span class="schedule-badge status-${status}">${status}</span>
       <span class="notice-board-date">${formatDateLabel(notice.postedOn)}</span>
+      <span class="notice-board-date">${formatDateLabel(applyStart)}</span>
+      <span class="notice-board-date">${formatDateLabel(notice.applyEnd)}</span>
+      <span class="notice-board-count">${Number(notice.rowCount || 0).toLocaleString("ko-KR")}</span>
       <span class="notice-board-title">${escapeHtml(notice.title)}</span>
     `;
     button.addEventListener("click", () => openNotice(notice.id));
@@ -203,20 +190,13 @@ function updateAppNav(view) {
   for (const step of appNav.querySelectorAll(".app-step")) {
     const stepName = step.dataset.step;
     step.classList.toggle("is-current", stepName === view);
-    step.classList.toggle("is-done", stepOrder(stepName) < stepOrder(view));
+    step.classList.toggle("is-done", stepName === "board" && view === "detail");
   }
-}
-
-function stepOrder(view) {
-  if (view === "board") return 0;
-  if (view === "notice") return 1;
-  return 2;
 }
 
 function showView(view) {
   viewBoard.hidden = view !== "board";
-  viewNotice.hidden = view !== "notice";
-  viewHousing.hidden = view !== "housing";
+  viewDetail.hidden = view !== "detail";
   updateAppNav(view);
   window.scrollTo({ top: 0, behavior: "smooth" });
 }
@@ -490,20 +470,26 @@ function renderRegionFilters(rows) {
 
 async function fetchNoticeData(notice) {
   showStatus("공고 데이터를 불러오는 중입니다.");
-  openHousingBtn.disabled = true;
   try {
     const res = await fetch(encodeURI(notice.dataFile));
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     currentData = await res.json();
     showStatus("");
-    openHousingBtn.disabled = false;
     return true;
   } catch (err) {
     currentData = null;
     showStatus(`공고 데이터를 불러오지 못했습니다. ${err.message}`, true);
-    openHousingBtn.disabled = true;
     return false;
   }
+}
+
+function setupHousingView() {
+  if (!currentData) return;
+  renderRegionFilters(currentData.rows);
+  renderTypeFilters(currentData.rows, currentData.filterCols);
+  setupRangeFilters(currentData.rows);
+  dedupToggle.checked = false;
+  renderTable();
 }
 
 async function openNotice(id) {
@@ -516,27 +502,13 @@ async function openNotice(id) {
 
   currentData = null;
   renderNoticeDetail(currentNotice);
-  renderHousingSummary(currentNotice);
-  showView("notice");
-  showStatus("");
-  await fetchNoticeData(currentNotice);
-}
+  showView("detail");
+  tableHead.innerHTML = "";
+  tableBody.innerHTML = "";
+  resultHeading.textContent = "주택 리스트 조회 (총 0건)";
 
-async function openHousing() {
-  if (!currentNotice) return;
-  if (!currentData) {
-    const ok = await fetchNoticeData(currentNotice);
-    if (!ok) return;
-  }
-
-  renderHousingSummary(currentNotice);
-  renderRegionFilters(currentData.rows);
-  renderTypeFilters(currentData.rows, currentData.filterCols);
-  setupRangeFilters(currentData.rows);
-  dedupToggle.checked = false;
-  renderTable();
-  showView("housing");
-  showStatus("");
+  const ok = await fetchNoticeData(currentNotice);
+  if (ok) setupHousingView();
 }
 
 function refreshBoard() {
@@ -565,12 +537,6 @@ function bindEvents() {
     showView("board");
     showStatus("");
   });
-  backToNoticeBtn.addEventListener("click", () => {
-    if (currentNotice) renderNoticeDetail(currentNotice);
-    showView("notice");
-    showStatus("");
-  });
-  openHousingBtn.addEventListener("click", () => openHousing());
 
   for (const step of appNav.querySelectorAll(".app-step")) {
     step.addEventListener("click", () => {
@@ -580,14 +546,11 @@ function bindEvents() {
         showStatus("");
         return;
       }
-      if (target === "notice" && currentNotice) {
+      if (target === "detail" && currentNotice && currentData) {
         renderNoticeDetail(currentNotice);
-        showView("notice");
+        setupHousingView();
+        showView("detail");
         showStatus("");
-        return;
-      }
-      if (target === "housing" && currentNotice && currentData) {
-        openHousing();
       }
     });
   }

@@ -22,16 +22,15 @@
     <main>
       <nav id="app-nav" class="app-nav" aria-label="화면 단계">
         <ol class="app-steps">
-          <li class="app-step is-current" data-step="board">게시판</li>
-          <li class="app-step" data-step="notice">공고 선택</li>
-          <li class="app-step" data-step="housing">주택 목록</li>
+          <li class="app-step is-current" data-step="board">공고게시판</li>
+          <li class="app-step" data-step="detail">공고 · 주택목록</li>
         </ol>
       </nav>
 
       <p id="status" class="status" hidden></p>
 
       <section id="view-board" class="app-view panel panel-notice" aria-labelledby="board-heading">
-        <h2 id="board-heading">청약 공고 게시판</h2>
+        <h2 id="board-heading">공고게시판</h2>
         <div class="board-filters">
           <label>
             연도
@@ -48,34 +47,28 @@
             <label><input type="checkbox" name="status-filter" value="마감" checked /> 마감</label>
           </fieldset>
         </div>
-        <div class="notice-board" role="listbox" aria-label="청약 공고 목록">
+        <div class="notice-board" role="listbox" aria-label="공고 목록">
           <div class="notice-board-head" aria-hidden="true">
             <span>상태</span>
             <span>공고일</span>
+            <span>신청시작</span>
+            <span>신청마감</span>
+            <span>주택수</span>
             <span>공고명</span>
           </div>
           <div id="notice-board-list" class="notice-board-list"></div>
         </div>
       </section>
 
-      <section id="view-notice" class="app-view" hidden aria-labelledby="notice-heading">
+      <section id="view-detail" class="app-view" hidden aria-labelledby="detail-heading">
         <div class="view-toolbar">
-          <button type="button" id="back-to-board" class="btn-secondary">← 게시판으로</button>
+          <button type="button" id="back-to-board" class="btn-secondary">← 공고게시판으로</button>
         </div>
         <section class="panel panel-notice">
-          <h2 id="notice-heading">공고 상세</h2>
+          <h2 id="detail-heading">공고 상세</h2>
           <div id="notice-detail" class="notice-detail"></div>
-          <div class="view-actions">
-            <button type="button" id="open-housing-btn" class="btn-primary">주택 목록 조회</button>
-          </div>
         </section>
-      </section>
 
-      <section id="view-housing" class="app-view" hidden aria-labelledby="housing-heading">
-        <div class="view-toolbar">
-          <button type="button" id="back-to-notice" class="btn-secondary">← 공고 상세로</button>
-        </div>
-        <div id="housing-notice-summary" class="housing-notice-summary"></div>
         <section class="panel panel-filter" aria-labelledby="filter-heading">
           <h2 id="filter-heading">필터</h2>
           <div class="filter-grid">
@@ -121,13 +114,6 @@
         </div>
       </section>
     </main>
-
-    <footer>
-      <h2>연락처</h2>
-      <p>Tel. 010-4430-2279</p>
-      <p>E-mail. <a href="mailto:gnsu0705@gmail.com">gnsu0705@gmail.com</a></p>
-      <p>Blog. <a href="https://super-son.tistory.com" target="_blank" rel="noopener noreferrer">Super-Son</a></p>
-    </footer>
 
     <script src="app.js"></script>
   </body>
