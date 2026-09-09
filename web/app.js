@@ -8,7 +8,6 @@ const noticeBoardList = document.getElementById("notice-board-list");
 const noticeDetailEl = document.getElementById("notice-detail");
 const viewBoard = document.getElementById("view-board");
 const viewDetail = document.getElementById("view-detail");
-const appNav = document.getElementById("app-nav");
 const backToBoardBtn = document.getElementById("back-to-board");
 const sidoSelect = document.getElementById("sido-select");
 const sigunguSelect = document.getElementById("sigungu-select");
@@ -184,19 +183,10 @@ function renderNoticeBoard(list) {
   }
 }
 
-function updateAppNav(view) {
-  currentView = view;
-  for (const step of appNav.querySelectorAll(".app-step")) {
-    const stepName = step.dataset.step;
-    step.classList.toggle("is-current", stepName === view);
-    step.classList.toggle("is-done", stepName === "board" && view === "detail");
-  }
-}
-
 function showView(view) {
+  currentView = view;
   viewBoard.hidden = view !== "board";
   viewDetail.hidden = view !== "detail";
-  updateAppNav(view);
   window.scrollTo({ top: 0, behavior: "smooth" });
 }
 
@@ -563,23 +553,6 @@ function bindEvents() {
     showView("board");
     showStatus("");
   });
-
-  for (const step of appNav.querySelectorAll(".app-step")) {
-    step.addEventListener("click", () => {
-      const target = step.dataset.step;
-      if (target === "board") {
-        showView("board");
-        showStatus("");
-        return;
-      }
-      if (target === "detail" && currentNotice && currentData) {
-        renderNoticeDetail(currentNotice);
-        setupHousingView();
-        showView("detail");
-        showStatus("");
-      }
-    });
-  }
 
   sidoSelect.addEventListener("change", () => {
     if (!currentData) return;
