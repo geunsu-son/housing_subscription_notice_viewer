@@ -14,6 +14,7 @@ const depositMaxInput = document.getElementById("deposit-max");
 const areaValues = document.getElementById("area-values");
 const depositValues = document.getElementById("deposit-values");
 const dedupToggle = document.getElementById("dedup-toggle");
+const noticeScheduleEl = document.getElementById("notice-schedule");
 const resultHeading = document.getElementById("result-heading");
 const tableHead = document.querySelector("#result-table thead");
 const tableBody = document.querySelector("#result-table tbody");
@@ -61,7 +62,85 @@ function fillSelect(select, values, selected) {
 }
 
 function years() {
-  return unique(notices.map((n) => n.year));
+  return unique(notices.map((n) => n.year)).sort((a, b) => Number(b) - Number(a));
+}
+
+function parseDateValue(value) {
+  if (!value) return null;
+  const match = String(value).match(/^(\d{4})[.\-/](\d{1,2})[.\-/](\d{1,2})/);
+  if (!match) return null;
+  return new Date(Number(match[1]), Number(match[2]) - 1, Number(match[3]));
+}
+
+function formatDateLabel(value) {
+  if (!value) return "-";
+  const date = parseDateValue(value);
+  if (!date) return value;
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, "0");
+  const d = String(date.getDate()).padStart(2, "0");
+  return `${y}.${m}.${d}`;
+}
+
+function startOfDay(date) {
+  return new Date(date.getFullYear(), date.getMonth(), date.getDate());
+}
+
+function computeScheduleStatus(notice) {
+  const today = startOfDay(new Date());
+  const posted = parseDateValue(notice.postedOn);
+  const applyStart = parseDateValue(notice.applyStart || notice.postedOn);
+  const applyEnd = parseDateValue(notice.applyEnd);
+  const noticeStatus = notice.noticeStatus || "";
+
+  if (noticeStatus.includes("마감") || ["접수마감", "공고마감", "모집마감"].includes(noticeStatus)) {
+    return "마감";
+  }
+  if (noticeStatus === "공고중" || noticeStatus === "접수중") {
+    if (applyStart && today < applyStart) return "신청전";
+    if (applyEnd && today > applyEnd) return "마감";
+    return "진행중";
+  }
+  if (applyStart && today < applyStart) return "신청전";
+  if (applyEnd && today > applyEnd) return "마감";
+  if (applyStart || applyEnd) return "진행중";
+  if (posted) {
+    const days = (today - posted) / (1000 * 60 * 60 * 24);
+    if (days > 90) return "마감";
+    if (today < posted) return "신청전";
+  }
+  return "진행중";
+}
+
+function selectedStatusFilters() {
+  return new Set(
+    [...document.querySelectorAll('input[name="status-filter"]:checked')].map((el) => el.value),
+  );
+}
+
+function noticeLabel(notice) {
+  return `[${computeScheduleStatus(notice)}] ${notice.title}`;
+}
+
+function renderNoticeSchedule(notice) {
+  if (!notice) {
+    noticeScheduleEl.hidden = true;
+    noticeScheduleEl.innerHTML = "";
+    return;
+  }
+  const status = computeScheduleStatus(notice);
+  const applyStart = notice.applyStart || notice.postedOn;
+  const applyPeriod =
+    applyStart || notice.applyEnd
+      ? `${formatDateLabel(applyStart)} ~ ${formatDateLabel(notice.applyEnd)}`
+      : "신청기간 정보 없음";
+
+  noticeScheduleEl.hidden = false;
+  noticeScheduleEl.innerHTML = `
+    <span class="schedule-badge status-${status}">${status}</span>
+    <span class="schedule-line">공고일: ${formatDateLabel(notice.postedOn)}</span>
+    <span class="schedule-line">신청기간: ${escapeHtml(applyPeriod)}</span>
+  `;
 }
 
 function companies(year) {
@@ -69,7 +148,15 @@ function companies(year) {
 }
 
 function noticesFor(year, company) {
-  return notices.filter((n) => n.year === year && n.company === company);
+  const activeStatuses = selectedStatusFilters();
+  return notices
+    .filter((n) => n.year === year && n.company === company)
+    .filter((n) => activeStatuses.has(computeScheduleStatus(n)))
+    .sort((a, b) => {
+      const aDate = parseDateValue(a.postedOn || a.sourceFile)?.getTime() || 0;
+      const bDate = parseDateValue(b.postedOn || b.sourceFile)?.getTime() || 0;
+      return bDate - aDate;
+    });
 }
 
 function formatPyeong(x) {
@@ -328,9 +415,11 @@ async function loadNotice() {
   currentNotice = notices.find((n) => n.id === id);
   if (!currentNotice) {
     currentData = null;
+    renderNoticeSchedule(null);
     showStatus("해당 연도의 청약 공고가 없습니다.", true);
     return;
   }
+  renderNoticeSchedule(currentNotice);
   showStatus("공고 데이터를 불러오는 중입니다.");
   try {
     const res = await fetch(encodeURI(currentNotice.dataFile));
@@ -364,10 +453,24 @@ function refreshNoticeOptions({ keepNotice = false } = {}) {
   const previousNotice = keepNotice ? noticeSelect.value : "";
   const selected = list.some((n) => n.id === previousNotice) ? previousNotice : list[0]?.id;
   noticeSelect.innerHTML = "";
+  if (!list.length) {
+    const option = document.createElement("option");
+    option.value = "";
+    option.textContent = "선택 가능한 공고가 없습니다";
+    noticeSelect.appendChild(option);
+    currentNotice = null;
+    currentData = null;
+    renderNoticeSchedule(null);
+    tableHead.innerHTML = "";
+    tableBody.innerHTML = "";
+    resultHeading.textContent = "주택 리스트 조회 (총 0건)";
+    showStatus("선택한 상태 조건에 맞는 공고가 없습니다.", true);
+    return;
+  }
   for (const notice of list) {
     const option = document.createElement("option");
     option.value = notice.id;
-    option.textContent = notice.title;
+    option.textContent = noticeLabel(notice);
     if (notice.id === selected) option.selected = true;
     noticeSelect.appendChild(option);
   }
@@ -396,6 +499,9 @@ function bindEvents() {
   depositMinInput.addEventListener("input", renderTable);
   depositMaxInput.addEventListener("input", renderTable);
   dedupToggle.addEventListener("change", renderTable);
+  for (const input of document.querySelectorAll('input[name="status-filter"]')) {
+    input.addEventListener("change", () => refreshNoticeOptions({ keepNotice: false }));
+  }
 }
 
 async function init() {

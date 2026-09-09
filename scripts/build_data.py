@@ -14,6 +14,10 @@ import pandas as pd
 ROOT = Path(__file__).resolve().parent.parent
 SOURCE_DIR = ROOT / "source"
 OUTPUT_DIR = ROOT / "web" / "data"
+SCRIPTS_DIR = Path(__file__).resolve().parent
+
+sys.path.insert(0, str(SCRIPTS_DIR))
+from schedule_meta import load_schedule_by_source_file, merge_notice_schedule, sort_notices
 
 EXTENSIONS = (".xlsx", ".xls", ".csv")
 
@@ -221,8 +225,11 @@ def main() -> int:
         print(f"[삭제] 오래된 데이터 파일 {path.name}")
 
     index_path = OUTPUT_DIR / "index.json"
+    schedules = load_schedule_by_source_file()
+    enriched_notices = [merge_notice_schedule(notice, schedules) for notice in notices]
+    enriched_notices = sort_notices(enriched_notices)
     index_path.write_text(
-        json.dumps({"notices": notices}, ensure_ascii=False, indent=2),
+        json.dumps({"notices": enriched_notices}, ensure_ascii=False, indent=2),
         encoding="utf-8",
     )
     print(f"[완료] 공고 {len(notices)}개 → {index_path.relative_to(ROOT)}")

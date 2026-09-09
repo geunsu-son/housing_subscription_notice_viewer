@@ -102,6 +102,71 @@ select {
   background: #fff;
 }
 
+.notice-schedule {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 0.75rem;
+  align-items: center;
+  margin-top: 0.75rem;
+  padding: 0.65rem 0.75rem;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.75);
+  border: 1px solid #f3d48a;
+  font-size: 0.85rem;
+}
+
+.schedule-line {
+  color: var(--muted);
+}
+
+.schedule-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.15rem 0.55rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.schedule-badge.status-신청전 {
+  background: #e2e8f0;
+  color: #334155;
+}
+
+.schedule-badge.status-진행중 {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.schedule-badge.status-마감 {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.status-filters {
+  margin-top: 0.75rem;
+  padding: 0.65rem 0.75rem;
+  border-radius: 6px;
+  border: 1px solid #f3d48a;
+  background: rgba(255, 255, 255, 0.55);
+}
+
+.status-filters legend {
+  font-size: 0.85rem;
+  font-weight: 700;
+  padding: 0 0.25rem;
+}
+
+.status-filters label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin: 0.35rem 0.75rem 0 0;
+  font-size: 0.85rem;
+  font-weight: 500;
+  flex-direction: row;
+}
+
 .filter-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));

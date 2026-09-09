@@ -35,6 +35,13 @@
             청약 공고
             <select id="notice-select"></select>
           </label>
+          <div id="notice-schedule" class="notice-schedule" hidden></div>
+          <fieldset class="status-filters">
+            <legend>공고 상태</legend>
+            <label><input type="checkbox" name="status-filter" value="신청전" checked /> 신청전</label>
+            <label><input type="checkbox" name="status-filter" value="진행중" checked /> 진행중</label>
+            <label><input type="checkbox" name="status-filter" value="마감" checked /> 마감</label>
+          </fieldset>
         </section>
 
         <section class="panel panel-filter" aria-labelledby="filter-heading">

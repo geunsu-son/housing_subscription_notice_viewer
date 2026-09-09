@@ -550,7 +550,9 @@ def run(argv: list[str] | None = None) -> int:
                 seen[pan_id] = {
                     "title": notice["title"],
                     "posted_on": notice["posted_on"],
+                    "closes_on": notice["closes_on"],
                     "status": "no-housing-list",
+                    "notice_status": notice["status"],
                     "fetched_at": datetime.now().isoformat(timespec="seconds"),
                 }
                 skipped += 1
@@ -575,6 +577,8 @@ def run(argv: list[str] | None = None) -> int:
             seen[pan_id] = {
                 "title": notice["title"],
                 "posted_on": notice["posted_on"],
+                "closes_on": notice["closes_on"],
+                "status": notice["status"],
                 "source_file": filename,
                 "row_count": int(len(frame)),
                 "detail_url": (
