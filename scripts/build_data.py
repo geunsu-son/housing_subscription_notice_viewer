@@ -14,8 +14,35 @@ import pandas as pd
 ROOT = Path(__file__).resolve().parent.parent
 SOURCE_DIR = ROOT / "source"
 OUTPUT_DIR = ROOT / "web" / "data"
+SCRIPTS_DIR = Path(__file__).resolve().parent
+
+sys.path.insert(0, str(SCRIPTS_DIR))
+from schedule_meta import load_schedule_by_source_file, merge_notice_schedule, sort_notices
 
 EXTENSIONS = (".xlsx", ".xls", ".csv")
+
+SIDO_SUFFIXES = ("특별시", "광역시", "특별자치시", "도")
+
+
+def is_valid_sido(name: str) -> bool:
+    text = str(name or "").strip()
+    if not text or text.startswith("매입"):
+        return False
+    return any(text.endswith(suffix) for suffix in SIDO_SUFFIXES)
+
+
+def extract_regions(df: pd.DataFrame) -> str:
+    if "시도" not in df.columns:
+        return ""
+    seen: set[str] = set()
+    values: list[str] = []
+    for value in df["시도"].dropna().tolist():
+        text = str(value).strip()
+        if not is_valid_sido(text) or text in seen:
+            continue
+        seen.add(text)
+        values.append(text)
+    return ", ".join(sorted(values))
 
 
 def parse_filename(filename: str) -> tuple[str, str, str]:
@@ -151,6 +178,7 @@ def convert_file(path: Path) -> dict:
     rows = [row_to_dict(row, export_cols) for _, row in df.iterrows()]
     year, company, title = parse_filename(path.name)
     nid = notice_id(path.name)
+    regions = extract_regions(df)
     payload = {
         "id": nid,
         "kind": kind,
@@ -168,6 +196,7 @@ def convert_file(path: Path) -> dict:
             "dataFile": f"data/{nid}.json",
             "kind": kind,
             "rowCount": len(rows),
+            "regions": regions,
         },
         "payload": payload,
     }
@@ -221,8 +250,11 @@ def main() -> int:
         print(f"[삭제] 오래된 데이터 파일 {path.name}")
 
     index_path = OUTPUT_DIR / "index.json"
+    schedules = load_schedule_by_source_file()
+    enriched_notices = [merge_notice_schedule(notice, schedules) for notice in notices]
+    enriched_notices = sort_notices(enriched_notices)
     index_path.write_text(
-        json.dumps({"notices": notices}, ensure_ascii=False, indent=2),
+        json.dumps({"notices": enriched_notices}, ensure_ascii=False, indent=2),
         encoding="utf-8",
     )
     print(f"[완료] 공고 {len(notices)}개 → {index_path.relative_to(ROOT)}")

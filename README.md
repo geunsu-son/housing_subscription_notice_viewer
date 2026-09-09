@@ -55,4 +55,4 @@ python scripts/crawl_sh.py --lookback-days 90 --max-new 20
 | `scripts/lh-crawl-state.json` | 이미 가져온 LH 공고 ID |
 | `scripts/crawl_sh.py` | SH 매입임대 주택목록 수집 |
 | `scripts/sh-crawl-state.json` | 이미 가져온 SH 공고 ID |
-| `crawling_rent_house_list.ipynb` | 공고 수집 노트북 (사이트와 별개) |
+| `scripts/schedule_meta.py` | 공고 일정·상태 메타 병합 |

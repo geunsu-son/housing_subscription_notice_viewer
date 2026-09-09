@@ -30,6 +30,7 @@ from crawl_lh import (  # noqa: E402
     normalize_housing_table,
     write_source_excel,
 )
+from schedule_meta import parse_sh_schedule_text  # noqa: E402
 
 ROOT = Path(__file__).resolve().parent.parent
 STATE_PATH = ROOT / "scripts" / "sh-crawl-state.json"
@@ -417,6 +418,7 @@ def run(argv: list[str] | None = None) -> int:
         try:
             html = client.fetch_detail(seq)
             files = parse_down_list(html)
+            schedule = parse_sh_schedule_text(html)
             attachment = pick_housing_attachment(files)
             if attachment is None:
                 names = [str(item.get("oriFileNm") or "") for item in files]
@@ -474,6 +476,9 @@ def run(argv: list[str] | None = None) -> int:
             seen[seq] = {
                 "title": notice["title"],
                 "posted_on": notice["posted_on"],
+                "posted_on_announcement": schedule.get("postedOn"),
+                "apply_start": schedule.get("applyStart"),
+                "apply_end": schedule.get("applyEnd"),
                 "source_file": filename,
                 "row_count": int(len(frame)),
                 "detail_url": f"{VIEW_URL}?multi_itm_seq=2&seq={seq}",

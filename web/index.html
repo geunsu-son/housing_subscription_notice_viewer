@@ -20,9 +20,11 @@
     </header>
 
     <main>
-      <section class="panel-row">
-        <section class="panel panel-notice" aria-labelledby="notice-heading">
-          <h2 id="notice-heading">청약 공고 조회</h2>
+      <p id="status" class="status" hidden></p>
+
+      <section id="view-board" class="app-view panel panel-notice" aria-labelledby="board-heading">
+        <h2 id="board-heading">공고게시판</h2>
+        <div class="board-filters">
           <label>
             연도
             <select id="year-select"></select>
@@ -32,9 +34,59 @@
             <select id="company-select"></select>
           </label>
           <label>
-            청약 공고
-            <select id="notice-select"></select>
+            지역
+            <select id="region-select"></select>
           </label>
+          <fieldset class="status-filters">
+            <legend>공고 상태</legend>
+            <label><input type="checkbox" name="status-filter" value="신청전" checked /> 신청전</label>
+            <label><input type="checkbox" name="status-filter" value="진행중" checked /> 진행중</label>
+            <label><input type="checkbox" name="status-filter" value="마감" checked /> 마감</label>
+          </fieldset>
+        </div>
+        <div class="list-controls" id="board-list-controls">
+          <label>
+            정렬
+            <select id="board-sort">
+              <option value="posted-desc">공고일 최신순</option>
+              <option value="posted-asc">공고일 오래된순</option>
+              <option value="company-asc">주택공사</option>
+              <option value="region-asc">지역</option>
+              <option value="title-asc">공고명 (가나다)</option>
+              <option value="title-desc">공고명 (역순)</option>
+              <option value="apply-desc">신청기간 시작 최신</option>
+              <option value="apply-asc">신청기간 시작 오래된</option>
+            </select>
+          </label>
+          <label>
+            표시
+            <select id="board-page-size">
+              <option value="10">10개</option>
+              <option value="20" selected>20개</option>
+              <option value="50">50개</option>
+              <option value="100">100개</option>
+            </select>
+          </label>
+          <div id="board-pagination" class="pagination" aria-live="polite"></div>
+        </div>
+        <div class="notice-board" role="listbox" aria-label="공고 목록">
+          <div class="notice-board-head" aria-hidden="true">
+            <span>주택공사</span>
+            <span>지역</span>
+            <span>공고명</span>
+            <span>신청기간</span>
+          </div>
+          <div id="notice-board-list" class="notice-board-list"></div>
+        </div>
+      </section>
+
+      <section id="view-detail" class="app-view" hidden aria-labelledby="detail-heading">
+        <div class="view-toolbar">
+          <button type="button" id="back-to-board" class="btn-secondary">← 공고게시판으로</button>
+        </div>
+        <section class="panel panel-notice">
+          <h2 id="detail-heading">공고 상세</h2>
+          <div id="notice-detail" class="notice-detail"></div>
         </section>
 
         <section class="panel panel-filter" aria-labelledby="filter-heading">
@@ -67,30 +119,33 @@
             </div>
           </div>
         </section>
+
+        <label class="dedup-toggle">
+          <input id="dedup-toggle" type="checkbox" />
+          주소 중복제거
+        </label>
+
+        <h2 id="result-heading">주택 리스트 조회 (총 0건)</h2>
+        <div class="list-controls" id="housing-list-controls">
+          <label>
+            표시
+            <select id="housing-page-size">
+              <option value="10">10개</option>
+              <option value="20" selected>20개</option>
+              <option value="50">50개</option>
+              <option value="100">100개</option>
+            </select>
+          </label>
+          <div id="housing-pagination" class="pagination" aria-live="polite"></div>
+        </div>
+        <div class="table-wrap">
+          <table id="result-table">
+            <thead></thead>
+            <tbody></tbody>
+          </table>
+        </div>
       </section>
-
-      <p id="status" class="status" hidden></p>
-
-      <label class="dedup-toggle">
-        <input id="dedup-toggle" type="checkbox" />
-        주소 중복제거
-      </label>
-
-      <h2 id="result-heading">주택 리스트 조회 (총 0건)</h2>
-      <div class="table-wrap">
-        <table id="result-table">
-          <thead></thead>
-          <tbody></tbody>
-        </table>
-      </div>
     </main>
-
-    <footer>
-      <h2>연락처</h2>
-      <p>Tel. 010-4430-2279</p>
-      <p>E-mail. <a href="mailto:gnsu0705@gmail.com">gnsu0705@gmail.com</a></p>
-      <p>Blog. <a href="https://super-son.tistory.com" target="_blank" rel="noopener noreferrer">Super-Son</a></p>
-    </footer>
 
     <script src="app.js"></script>
   </body>
