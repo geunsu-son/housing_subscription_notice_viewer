@@ -21,6 +21,29 @@ from schedule_meta import load_schedule_by_source_file, merge_notice_schedule, s
 
 EXTENSIONS = (".xlsx", ".xls", ".csv")
 
+SIDO_SUFFIXES = ("특별시", "광역시", "특별자치시", "도")
+
+
+def is_valid_sido(name: str) -> bool:
+    text = str(name or "").strip()
+    if not text or text.startswith("매입"):
+        return False
+    return any(text.endswith(suffix) for suffix in SIDO_SUFFIXES)
+
+
+def extract_regions(df: pd.DataFrame) -> str:
+    if "시도" not in df.columns:
+        return ""
+    seen: set[str] = set()
+    values: list[str] = []
+    for value in df["시도"].dropna().tolist():
+        text = str(value).strip()
+        if not is_valid_sido(text) or text in seen:
+            continue
+        seen.add(text)
+        values.append(text)
+    return ", ".join(sorted(values))
+
 
 def parse_filename(filename: str) -> tuple[str, str, str]:
     """Parse '{date} {company} {title}.xlsx', using the leading year token before the first dot."""
@@ -155,6 +178,7 @@ def convert_file(path: Path) -> dict:
     rows = [row_to_dict(row, export_cols) for _, row in df.iterrows()]
     year, company, title = parse_filename(path.name)
     nid = notice_id(path.name)
+    regions = extract_regions(df)
     payload = {
         "id": nid,
         "kind": kind,
@@ -172,6 +196,7 @@ def convert_file(path: Path) -> dict:
             "dataFile": f"data/{nid}.json",
             "kind": kind,
             "rowCount": len(rows),
+            "regions": regions,
         },
         "payload": payload,
     }

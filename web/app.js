@@ -126,11 +126,7 @@ function selectedStatusFilters() {
 
 function noticeDetailHtml(notice) {
   const status = computeScheduleStatus(notice);
-  const applyStart = notice.applyStart || notice.postedOn;
-  const applyPeriod =
-    applyStart || notice.applyEnd
-      ? `${formatDateLabel(applyStart)} ~ ${formatDateLabel(notice.applyEnd)}`
-      : "신청기간 정보 없음";
+  const applyPeriod = formatApplyPeriod(notice) || "신청기간 정보 없음";
   const detailLink = notice.detailUrl
     ? `<a class="notice-detail-link" href="${escapeHtml(notice.detailUrl)}" target="_blank" rel="noopener noreferrer">원문 보기</a>`
     : "";
@@ -157,6 +153,12 @@ function renderNoticeDetail(notice) {
   noticeDetailEl.innerHTML = noticeDetailHtml(notice);
 }
 
+function formatApplyPeriod(notice) {
+  const applyStart = notice.applyStart || notice.postedOn;
+  if (!applyStart && !notice.applyEnd) return "";
+  return `${formatDateLabel(applyStart)} ~ ${formatDateLabel(notice.applyEnd)}`;
+}
+
 function renderNoticeBoard(list) {
   noticeBoardList.innerHTML = "";
   if (!list.length) {
@@ -166,7 +168,6 @@ function renderNoticeBoard(list) {
 
   for (const notice of list) {
     const status = computeScheduleStatus(notice);
-    const applyStart = notice.applyStart || notice.postedOn;
     const button = document.createElement("button");
     button.type = "button";
     button.className = "notice-board-item";
@@ -174,10 +175,10 @@ function renderNoticeBoard(list) {
     button.setAttribute("role", "option");
     button.innerHTML = `
       <span class="schedule-badge status-${status}">${status}</span>
+      <span class="notice-board-company">${escapeHtml(notice.company || "")}</span>
+      <span class="notice-board-region">${escapeHtml(notice.regions || "")}</span>
       <span class="notice-board-date">${formatDateLabel(notice.postedOn)}</span>
-      <span class="notice-board-date">${formatDateLabel(applyStart)}</span>
-      <span class="notice-board-date">${formatDateLabel(notice.applyEnd)}</span>
-      <span class="notice-board-count">${Number(notice.rowCount || 0).toLocaleString("ko-KR")}</span>
+      <span class="notice-board-period">${escapeHtml(formatApplyPeriod(notice))}</span>
       <span class="notice-board-title">${escapeHtml(notice.title)}</span>
     `;
     button.addEventListener("click", () => openNotice(notice.id));
