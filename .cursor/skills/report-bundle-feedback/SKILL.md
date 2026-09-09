@@ -1,12 +1,12 @@
 ---
 name: report-bundle-feedback
-description: 번들 Skill 사용 후 개선 제안을 Issue 초안으로 정리하고, 사용자 2차 승인 후 번들 소스 repo에 전송한다
+description: 번들 사용 기록을 Issue 초안으로 정리하고, 공용 절차 패치가 있을 때만 별도 칸에 적는다. 사용자 2차 승인 후 번들 소스 repo에 전송한다.
 ---
 
 # Report Bundle Feedback
 
-`bundle-catalog` **총관리 Rule의 하위 Skill**입니다. 별도 번들이 아닙니다.  
-Rule·Skill·gate 개선 제안을 번들 소스 repo Issue로 되돌릴 때 이 절차를 따른다.
+`bundle-catalog` **총관리 Rule의 하위 Skill**입니다. 별도 번들이 아닙니다.
+번들을 어떻게 썼는지 번들 소스 repo Issue로 되돌릴 때 이 절차를 따른다.
 
 ## 사용 시점
 
@@ -14,14 +14,15 @@ Rule·Skill·gate 개선 제안을 번들 소스 repo Issue로 되돌릴 때 이
 
 - `.cursor/agent-bundles/catalog.md`의 `Feedback Participation`이 `enabled`다.
 - **작업 완료**를 사용자가 알렸거나, **번들 Skill을 사용한 PR**이 작성되었다.
-- 이번 작업에서 Rule·Skill·gate에 **추가·개선하면 좋겠다고 제안할 내용**이 있다.
+- 이번 작업에서 번들을 사용해 **사용 기록**을 남길 수 있다.
 
-`disabled`이면 이 Skill을 시작하지 않는다.
+Skill·Rule 패치 제안이 없어도 시작한다. `disabled`이면 이 Skill을 시작하지 않는다.
 
 ## 목표
 
-번들 Skill 활용 과정에서 생긴 **개선 제안과 이유**를 번들 소스 repo Issue로 남긴다.  
-전송 전 사용자가 본문을 검토하고 **2차 승인**한다. 실패해도 강요하지 않는다.
+Issue 본문의 기본은 **사용 기록**이다. 소비 프로젝트에서 어떻게 썼는지, 무엇이 도움 됐는지, 대화로 무엇을 정했는지를 남긴다.
+
+Skill·Rule 패치는 **공용 절차**에 해당할 때만 별도 칸에 적는다. 전송 전 사용자가 본문을 검토하고 **2차 승인**한다. 실패해도 강요하지 않는다.
 
 ## 기본값
 
@@ -31,9 +32,23 @@ Rule·Skill·gate 개선 제안을 번들 소스 repo Issue로 되돌릴 때 이
 ## 보낼 내용 (중심)
 
 - 사용한 **번들·Skill·Rule** 이름
-- Skill·Rule·gate에 **추가하거나 개선하면 좋겠다는 제안**
-- **그렇게 제안하는 이유** (어떤 작업 맥락에서 불편·부족·과했는지)
-- (선택) 바로 도움이 된 점, 과했던 절차
+- 번들을 **어떻게 썼는지** (순서, 설치한 번들, 산출물 종류)
+- **바로 도움이 된 점**
+- 대화로 정한 것. 다른 예시 번들 Skill에 넣지 말 항목은 여기에만 둔다
+
+## Skill / Rule 칸에 넣을 것 (있을 때만)
+
+다음이면 패치 칸에 적어도 된다.
+
+- 피드백 Issue를 쓰는 방식, gate, 공방 키트처럼 **여러 소비 프로젝트에 공통인 절차**
+- 그렇게 제안하는 **이유**
+
+다음에 해당하면 패치 칸에 넣지 않고 `What we resolved in conversation`에만 적는다.
+
+- 이 소비 프로젝트만의 글 종류·스타일 팩 개수·수집 편수·게시 방식
+- “우리 블로그는 이렇게 하라”를 다른 예시 번들 기본 규칙으로 만들자는 내용
+
+패치가 없으면 그 칸을 비우거나 생략한다. 사용 맥락을 Skill 패치 요청으로 바꾸지 않는다.
 
 ## 보내지 않을 내용
 
@@ -43,6 +58,7 @@ Rule·Skill·gate 개선 제안을 번들 소스 repo Issue로 되돌릴 때 이
 - 내부 전용 URL, 사설 IP, VPN 주소
 - 고객·개인 식별 정보, 계약·매출 등 민감 업무 데이터
 - consumer repo **소스 코드 전체** 또는 대용량 로그
+- 원고 전문, 수집 JSON, 주제 정리 원문
 - 사용자가 “빼 달라”고 한 내용
 
 repo 이름·공개 URL·PR 번호·번들명 정도는 가능하나, 내부 전용 정보는 `[REDACTED]`로 바꾼다.
@@ -61,13 +77,14 @@ repo 이름·공개 URL·PR 번호·번들명 정도는 가능하나, 내부 전
 
 ### 2. 1차 gate — 보내도 될지
 
-개선 제안이 있을 때만 짧게 묻는다.
+사용 기록을 남길 수 있을 때 짧게 묻는다.
 
 ```text
-이번 작업에서 Agent Skill Bundle Rule·Skill 개선 제안이 있습니다.
+이번 작업에서 쓴 Agent Skill Bundle 사용 기록을
 번들 소스 repo(agent_skill_bundle)에 Issue로 보내도 될까요?
 
-- 보내면: 개선 제안과 이유만 전송합니다 (민감 정보는 제외).
+- 보내면: 어떻게 썼는지, 도움이 된 점, 대화로 정한 것을 전송합니다.
+  공용 절차 패치가 있으면 별도 칸에만 적습니다 (민감 정보는 제외).
 - 보내지 않으면: 여기서 종료합니다.
 ```
 
@@ -75,7 +92,7 @@ repo 이름·공개 URL·PR 번호·번들명 정도는 가능하나, 내부 전
 
 ### 3. Issue 초안 작성
 
-아래 형식으로 초안을 만든다. **개선 제안·이유**가 본문의 중심이어야 한다.
+아래 형식을 기본으로 쓴다. **사용 기록**이 본문 중심이어야 한다.
 
 ```md
 ## Summary
@@ -84,25 +101,38 @@ repo 이름·공개 URL·PR 번호·번들명 정도는 가능하나, 내부 전
 - Bundle(s) used: ...
 - Trigger: work complete | PR <link or number>
 - Date: YYYY-MM-DD
+- Issue type: 사용 기록 | 사용 기록 + 공용 절차 패치
+
+## How we used the bundles
+
+1. ...
+
+## What worked
+
+- ...
+
+## What we resolved in conversation (do not bake into Skills)
+
+이번 소비 프로젝트에서 합의한 내용. 다른 예시 번들 Skill에 넣지 말 것.
+
+- ...
 
 ## Skill / Rule improvement suggestions
 
+공용 절차에 해당하는 것만. 없으면 이 칸을 생략한다.
+
 ### 1. <Skill or Rule name>
 
-**Suggestion:** 무엇을 추가·수정하면 좋은지
+**Suggestion:** 무엇을 추가·수정하면 좋은지 (공용 절차)
 
 **Reason:** 작업 중 왜 필요했는지
-
-### 2. ...
-
-## What worked (optional)
-
-- ...
 
 ## Out of scope
 
 - No secrets or customer data included.
 ```
+
+초안을 쓰기 전에, 소비 특수 규칙을 패치 칸에 넣었으면 사용 기록 칸으로 옮긴다.
 
 민감 정보가 섞였으면 제거하거나 `[REDACTED]` 처리한다.
 
@@ -112,7 +142,8 @@ repo 이름·공개 URL·PR 번호·번들명 정도는 가능하나, 내부 전
 
 ```text
 아래 Issue 초안을 검토해 주세요.
-민감한 정보가 없는지 확인한 뒤, 정말 번들 소스 repo에 보낼까요?
+민감한 정보가 없는지, 소비 특수 규칙이 Skill 패치로 올라가지 않았는지
+확인한 뒤, 정말 번들 소스 repo에 보낼까요?
 
 ---
 <초안 전체>
@@ -128,10 +159,12 @@ repo 이름·공개 URL·PR 번호·번들명 정도는 가능하나, 내부 전
 
 승인 후 번들 소스 repo에 Issue를 생성한다.
 
+제목은 사용 기록을 드러낸다. 공용 절차 패치가 있으면 뒤에 덧붙인다.
+
 ```bash
 gh issue create \
   -R geunsu-son/agent_skill_bundle \
-  --title "Bundle feedback: <bundle-name> — <short summary>" \
+  --title "Bundle feedback: <bundle-name> — usage record" \
   --body-file /tmp/bundle-feedback.md \
   --label "bundle-feedback"
 ```
@@ -162,6 +195,8 @@ Issue 작성: https://github.com/geunsu-son/agent_skill_bundle/issues/new
 
 - `disabled`면 시작하지 않았다.
 - `enabled`일 때 1차·2차 gate를 거쳤다.
+- 초안 중심이 사용 기록이다.
+- 소비 특수 합의가 다른 예시 번들 Skill 패치로 올라가지 않았다.
 - 전송 전 사용자가 초안 전체를 봤다.
 - 민감 정보가 본문에 없다.
 - 실패 시 강요 없이 선택 안내만 했다.
@@ -169,6 +204,6 @@ Issue 작성: https://github.com/geunsu-son/agent_skill_bundle/issues/new
 ## 기본 요청 예시
 
 ```text
-이번 작업에서 쓴 Skill 번들 개선 제안을
+이번 작업에서 쓴 Skill 번들 사용 기록을
 report-bundle-feedback Skill 절차로 Issue 초안까지 만들어줘.
 ```
