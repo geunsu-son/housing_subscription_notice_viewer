@@ -2,7 +2,7 @@
 
 HUG, LH, SH 청약 공고를 필터로 조회하고 네이버 지도로 열어보는 정적 사이트입니다.
 
-**배포:** Cloudflare Workers — https://housing-subscription-notice-viewer.gnsu0705.workers.dev/
+**배포:** Cloudflare Pages — https://housing-subscription-notice-viewer.pages.dev/
 
 ## 로컬에서 보기
 
