@@ -179,7 +179,6 @@ select {
 }
 
 .notice-board-list {
-  max-height: min(520px, 60vh);
   overflow-y: auto;
 }
 
@@ -374,6 +373,110 @@ select {
   gap: 0.4rem;
 }
 
+.collapsible-filter {
+  border: 1px solid #fca5a5;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.65);
+  margin-top: 0.75rem;
+}
+
+.collapsible-filter-summary {
+  cursor: pointer;
+  padding: 0.55rem 0.65rem;
+  font-weight: 600;
+  list-style: none;
+}
+
+.collapsible-filter-summary::-webkit-details-marker {
+  display: none;
+}
+
+.collapsible-filter-summary::before {
+  content: "▸ ";
+  color: var(--filter);
+}
+
+.collapsible-filter[open] .collapsible-filter-summary::before {
+  content: "▾ ";
+}
+
+.collapsible-filter-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  padding: 0 0.65rem 0.65rem;
+  max-height: 180px;
+  overflow-y: auto;
+}
+
+.collapsible-filter-body label {
+  margin: 0;
+  font-weight: 400;
+  flex-direction: row;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.list-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: 0.75rem 1rem;
+  margin: 0.75rem 0;
+  padding: 0.65rem 0.75rem;
+  border-radius: 6px;
+  border: 1px solid var(--line);
+  background: rgba(255, 255, 255, 0.75);
+}
+
+#view-board .list-controls {
+  border-color: #f3d48a;
+  background: rgba(255, 255, 255, 0.55);
+}
+
+.list-controls label {
+  margin: 0;
+  min-width: 8rem;
+}
+
+.pagination {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.65rem 1rem;
+  margin-left: auto;
+}
+
+.pagination-summary {
+  font-size: 0.85rem;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.pagination-nav {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.pagination-page {
+  font-size: 0.85rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  min-width: 4.5rem;
+  text-align: center;
+}
+
+.pagination-btn {
+  padding: 0.35rem 0.75rem;
+  font-size: 0.85rem;
+}
+
+.pagination-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
 .range-values {
   font-weight: 400;
   color: var(--muted);
@@ -428,6 +531,20 @@ th {
   top: 0;
 }
 
+th.sortable {
+  cursor: pointer;
+  user-select: none;
+}
+
+th.sortable:hover {
+  background: #eef2f7;
+}
+
+th.sorted-asc,
+th.sorted-desc {
+  background: #e2e8f0;
+}
+
 tr:hover td {
   background: #f8fafc;
 }
@@ -457,5 +574,16 @@ a {
 
   table {
     min-width: 600px;
+  }
+
+  .list-controls {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .pagination {
+    margin-left: 0;
+    width: 100%;
+    justify-content: space-between;
   }
 }

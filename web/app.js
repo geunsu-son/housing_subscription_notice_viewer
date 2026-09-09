@@ -23,12 +23,24 @@ const resultHeading = document.getElementById("result-heading");
 const tableHead = document.querySelector("#result-table thead");
 const tableBody = document.querySelector("#result-table tbody");
 const statusEl = document.getElementById("status");
+const boardSortSelect = document.getElementById("board-sort");
+const boardPageSizeSelect = document.getElementById("board-page-size");
+const boardPaginationEl = document.getElementById("board-pagination");
+const housingPageSizeSelect = document.getElementById("housing-page-size");
+const housingPaginationEl = document.getElementById("housing-pagination");
 
 let notices = [];
 let currentNotice = null;
 let currentData = null;
 let selectedNoticeId = "";
 let currentView = "board";
+let boardFilteredList = [];
+let boardPage = 1;
+let housingFilteredRows = [];
+let housingVisibleCols = [];
+let housingPage = 1;
+let housingSortCol = "";
+let housingSortDir = "asc";
 
 function showStatus(message, isError = false) {
   statusEl.hidden = !message;
@@ -66,6 +78,120 @@ function fillSelect(select, values, selected) {
     select.appendChild(option);
   }
 }
+
+function compareText(a, b, dir = 1) {
+  return String(a ?? "").localeCompare(String(b ?? ""), "ko") * dir;
+}
+
+function compareNumber(a, b, dir = 1) {
+  const av = Number(a);
+  const bv = Number(b);
+  if (Number.isNaN(av) && Number.isNaN(bv)) return 0;
+  if (Number.isNaN(av)) return 1;
+  if (Number.isNaN(bv)) return -1;
+  return (av - bv) * dir;
+}
+
+function compareDateValue(a, b, dir = 1) {
+  const av = parseDateValue(a)?.getTime();
+  const bv = parseDateValue(b)?.getTime();
+  if (av == null && bv == null) return 0;
+  if (av == null) return 1;
+  if (bv == null) return -1;
+  return (av - bv) * dir;
+}
+
+function paginateList(items, page, pageSize) {
+  const total = items.length;
+  const totalPages = Math.max(1, Math.ceil(total / pageSize) || 1);
+  const safePage = Math.min(Math.max(1, page), totalPages);
+  const startIndex = (safePage - 1) * pageSize;
+  const pageItems = items.slice(startIndex, startIndex + pageSize);
+  return {
+    items: pageItems,
+    page: safePage,
+    pageSize,
+    total,
+    totalPages,
+    rangeStart: total ? startIndex + 1 : 0,
+    rangeEnd: total ? startIndex + pageItems.length : 0,
+  };
+}
+
+function renderPaginationControls(container, meta, onPageChange) {
+  if (!container) return;
+  if (!meta.total) {
+    container.innerHTML = `<span class="pagination-summary">0건</span>`;
+    return;
+  }
+
+  container.innerHTML = `
+    <span class="pagination-summary">${meta.total.toLocaleString("ko-KR")}건 중 ${meta.rangeStart.toLocaleString("ko-KR")}-${meta.rangeEnd.toLocaleString("ko-KR")}</span>
+    <div class="pagination-nav">
+      <button type="button" class="btn-secondary pagination-btn" data-page="${meta.page - 1}" ${meta.page <= 1 ? "disabled" : ""}>이전</button>
+      <span class="pagination-page">${meta.page} / ${meta.totalPages}</span>
+      <button type="button" class="btn-secondary pagination-btn" data-page="${meta.page + 1}" ${meta.page >= meta.totalPages ? "disabled" : ""}>다음</button>
+    </div>
+  `;
+
+  for (const button of container.querySelectorAll(".pagination-btn")) {
+    button.addEventListener("click", () => {
+      const nextPage = Number(button.dataset.page);
+      if (!Number.isFinite(nextPage)) return;
+      onPageChange(nextPage);
+    });
+  }
+}
+
+function sortNotices(list, sortKey) {
+  const sorted = [...list];
+  sorted.sort((a, b) => {
+    switch (sortKey) {
+      case "company-asc":
+        return compareText(a.company, b.company) || compareText(a.title, b.title);
+      case "region-asc":
+        return compareText(a.regions, b.regions) || compareText(a.title, b.title);
+      case "title-asc":
+        return compareText(a.title, b.title);
+      case "title-desc":
+        return compareText(b.title, a.title);
+      case "apply-asc":
+        return compareDateValue(a.applyStart, b.applyStart) || compareText(a.title, b.title);
+      case "apply-desc":
+        return compareDateValue(b.applyStart, a.applyStart) || compareText(a.title, b.title);
+      case "posted-asc":
+        return (
+          compareDateValue(a.postedOn || a.sourceFile, b.postedOn || b.sourceFile) ||
+          compareText(a.title, b.title)
+        );
+      case "posted-desc":
+      default:
+        return (
+          compareDateValue(b.postedOn || b.sourceFile, a.postedOn || a.sourceFile) ||
+          compareText(a.title, b.title)
+        );
+    }
+  });
+  return sorted;
+}
+
+function sortRows(rows, col, dir) {
+  if (!col || !rows.length) return rows;
+  const multiplier = dir === "desc" ? -1 : 1;
+  return [...rows].sort((a, b) => {
+    const av = a[col];
+    const bv = b[col];
+    if (typeof av === "number" || typeof bv === "number") {
+      return compareNumber(av, bv, multiplier);
+    }
+    const numeric = compareNumber(av, bv, 0);
+    if (numeric !== 0 && !Number.isNaN(Number(av)) && !Number.isNaN(Number(bv))) {
+      return numeric * multiplier;
+    }
+    return compareText(av, bv, multiplier);
+  });
+}
+
 
 function years() {
   return unique(notices.map((n) => n.year)).sort((a, b) => Number(b) - Number(a));
@@ -170,6 +296,7 @@ function renderNoticeBoard(list) {
     const button = document.createElement("button");
     button.type = "button";
     button.className = "notice-board-item";
+    if (notice.id === selectedNoticeId) button.classList.add("is-selected");
     button.dataset.id = notice.id;
     button.setAttribute("role", "option");
     button.innerHTML = `
@@ -181,6 +308,19 @@ function renderNoticeBoard(list) {
     button.addEventListener("click", () => openNotice(notice.id));
     noticeBoardList.appendChild(button);
   }
+}
+
+function renderBoardList() {
+  const sortKey = boardSortSelect.value;
+  const pageSize = Number(boardPageSizeSelect.value) || 20;
+  boardFilteredList = sortNotices(boardFilteredList, sortKey);
+  const meta = paginateList(boardFilteredList, boardPage, pageSize);
+  boardPage = meta.page;
+  renderNoticeBoard(meta.items);
+  renderPaginationControls(boardPaginationEl, meta, (nextPage) => {
+    boardPage = nextPage;
+    renderBoardList();
+  });
 }
 
 function showView(view) {
@@ -217,12 +357,7 @@ function noticesFor(year, company, region = "전체") {
   return notices
     .filter((n) => n.year === year && n.company === company)
     .filter((n) => region === "전체" || noticeRegions(n).includes(region))
-    .filter((n) => activeStatuses.has(computeScheduleStatus(n)))
-    .sort((a, b) => {
-      const aDate = parseDateValue(a.postedOn || a.sourceFile)?.getTime() || 0;
-      const bDate = parseDateValue(b.postedOn || b.sourceFile)?.getTime() || 0;
-      return bDate - aDate;
-    });
+    .filter((n) => activeStatuses.has(computeScheduleStatus(n)));
 }
 
 function formatPyeong(x) {
@@ -264,11 +399,19 @@ function renderTypeFilters(rows, filterCols) {
   filterCols.forEach((col, index) => {
     const values = unique(rows.map((row) => row[col]));
     if (values.length <= 1) return;
-    const group = document.createElement("div");
-    group.className = "checkbox-group";
-    const title = document.createElement("span");
-    title.textContent = col;
-    group.appendChild(title);
+
+    const details = document.createElement("details");
+    details.className = "collapsible-filter";
+    details.open = values.length <= 4;
+
+    const summary = document.createElement("summary");
+    summary.className = "collapsible-filter-summary";
+    summary.textContent = `${col} (${values.length})`;
+    details.appendChild(summary);
+
+    const body = document.createElement("div");
+    body.className = "collapsible-filter-body";
+
     for (const value of sortValues(values)) {
       const label = document.createElement("label");
       const input = document.createElement("input");
@@ -276,12 +419,17 @@ function renderTypeFilters(rows, filterCols) {
       input.name = `filter-${index}`;
       input.value = String(value);
       input.checked = true;
-      input.addEventListener("change", renderTable);
+      input.addEventListener("change", () => {
+        housingPage = 1;
+        renderTable();
+      });
       label.appendChild(input);
       label.appendChild(document.createTextNode(String(value)));
-      group.appendChild(label);
+      body.appendChild(label);
     }
-    typeFilters.appendChild(group);
+
+    details.appendChild(body);
+    typeFilters.appendChild(details);
   });
 }
 
@@ -427,6 +575,30 @@ function cellHtml(col, value) {
   return escapeHtml(value);
 }
 
+function renderTableHead(cols) {
+  tableHead.innerHTML = `<tr>${cols
+    .map((col) => {
+      const isSorted = housingSortCol === col;
+      const sortClass = isSorted ? ` sorted-${housingSortDir}` : "";
+      return `<th class="sortable${sortClass}" data-col="${escapeHtml(col)}" scope="col">${escapeHtml(col)}${isSorted ? (housingSortDir === "asc" ? " ▲" : " ▼") : ""}</th>`;
+    })
+    .join("")}</tr>`;
+
+  for (const th of tableHead.querySelectorAll("th.sortable")) {
+    th.addEventListener("click", () => {
+      const col = th.dataset.col;
+      if (housingSortCol === col) {
+        housingSortDir = housingSortDir === "asc" ? "desc" : "asc";
+      } else {
+        housingSortCol = col;
+        housingSortDir = "asc";
+      }
+      housingPage = 1;
+      renderTable();
+    });
+  }
+}
+
 function renderTable() {
   if (!currentData) return;
   const { rows, showCols, filterCols } = currentData;
@@ -457,16 +629,36 @@ function renderTable() {
   filtered = decorateRows(filtered, showCols);
   const hidden = hideUniqueColumns(filtered, showCols);
   filtered = hidden.rows;
+  housingVisibleCols = filtered.length ? Object.keys(filtered[0]) : hidden.visibleCols;
   if (dedupToggle.checked) {
     filtered = dedupRows(filtered, filterCols);
+    housingVisibleCols = filtered.length ? Object.keys(filtered[0]) : housingVisibleCols;
   }
 
-  const cols = filtered.length ? Object.keys(filtered[0]) : hidden.visibleCols;
-  resultHeading.textContent = `주택 리스트 조회 (총 ${filtered.length}건)`;
-  tableHead.innerHTML = `<tr>${cols.map((col) => `<th>${escapeHtml(col)}</th>`).join("")}</tr>`;
-  tableBody.innerHTML = filtered
-    .map((row) => `<tr>${cols.map((col) => `<td>${cellHtml(col, row[col])}</td>`).join("")}</tr>`)
+  if (housingSortCol && housingVisibleCols.includes(housingSortCol)) {
+    filtered = sortRows(filtered, housingSortCol, housingSortDir);
+  } else if (housingSortCol && !housingVisibleCols.includes(housingSortCol)) {
+    housingSortCol = "";
+    housingSortDir = "asc";
+  }
+
+  housingFilteredRows = filtered;
+  const pageSize = Number(housingPageSizeSelect.value) || 20;
+  const meta = paginateList(housingFilteredRows, housingPage, pageSize);
+  housingPage = meta.page;
+
+  resultHeading.textContent = `주택 리스트 조회 (총 ${meta.total.toLocaleString("ko-KR")}건)`;
+  renderTableHead(housingVisibleCols);
+  tableBody.innerHTML = meta.items
+    .map(
+      (row) =>
+        `<tr>${housingVisibleCols.map((col) => `<td>${cellHtml(col, row[col])}</td>`).join("")}</tr>`,
+    )
     .join("");
+  renderPaginationControls(housingPaginationEl, meta, (nextPage) => {
+    housingPage = nextPage;
+    renderTable();
+  });
 }
 
 function renderRegionFilters(rows) {
@@ -493,6 +685,9 @@ async function fetchNoticeData(notice) {
 
 function setupHousingView() {
   if (!currentData) return;
+  housingPage = 1;
+  housingSortCol = "";
+  housingSortDir = "asc";
   renderRegionFilters(currentData.rows);
   renderTypeFilters(currentData.rows, currentData.filterCols);
   setupRangeFilters(currentData.rows);
@@ -535,10 +730,11 @@ function refreshBoard() {
     : "전체";
   fillSelect(regionSelect, ["전체", ...regionOptions], region);
 
-  const list = noticesFor(year, companySelect.value, regionSelect.value);
-  renderNoticeBoard(list);
+  boardFilteredList = noticesFor(year, companySelect.value, regionSelect.value);
+  boardPage = 1;
+  renderBoardList();
 
-  if (!list.length && currentView === "board") {
+  if (!boardFilteredList.length && currentView === "board") {
     showStatus("선택한 조건에 맞는 공고가 없습니다.", true);
   } else if (currentView === "board") {
     showStatus("");
@@ -546,6 +742,18 @@ function refreshBoard() {
 }
 
 function bindEvents() {
+  boardSortSelect.addEventListener("change", () => {
+    boardPage = 1;
+    renderBoardList();
+  });
+  boardPageSizeSelect.addEventListener("change", () => {
+    boardPage = 1;
+    renderBoardList();
+  });
+  housingPageSizeSelect.addEventListener("change", () => {
+    housingPage = 1;
+    renderTable();
+  });
   yearSelect.addEventListener("change", refreshBoard);
   companySelect.addEventListener("change", refreshBoard);
   regionSelect.addEventListener("change", refreshBoard);
@@ -556,6 +764,7 @@ function bindEvents() {
 
   sidoSelect.addEventListener("change", () => {
     if (!currentData) return;
+    housingPage = 1;
     const sido = sidoSelect.value;
     const source =
       sido === "전체" ? currentData.rows : currentData.rows.filter((row) => row["시도"] === sido);
@@ -566,12 +775,30 @@ function bindEvents() {
     );
     renderTable();
   });
-  sigunguSelect.addEventListener("change", renderTable);
-  areaMinInput.addEventListener("input", renderTable);
-  areaMaxInput.addEventListener("input", renderTable);
-  depositMinInput.addEventListener("input", renderTable);
-  depositMaxInput.addEventListener("input", renderTable);
-  dedupToggle.addEventListener("change", renderTable);
+  sigunguSelect.addEventListener("change", () => {
+    housingPage = 1;
+    renderTable();
+  });
+  areaMinInput.addEventListener("input", () => {
+    housingPage = 1;
+    renderTable();
+  });
+  areaMaxInput.addEventListener("input", () => {
+    housingPage = 1;
+    renderTable();
+  });
+  depositMinInput.addEventListener("input", () => {
+    housingPage = 1;
+    renderTable();
+  });
+  depositMaxInput.addEventListener("input", () => {
+    housingPage = 1;
+    renderTable();
+  });
+  dedupToggle.addEventListener("change", () => {
+    housingPage = 1;
+    renderTable();
+  });
   for (const input of document.querySelectorAll('input[name="status-filter"]')) {
     input.addEventListener("change", refreshBoard);
   }
