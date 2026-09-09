@@ -5,6 +5,14 @@ const yearSelect = document.getElementById("year-select");
 const companySelect = document.getElementById("company-select");
 const noticeBoardList = document.getElementById("notice-board-list");
 const noticeDetailEl = document.getElementById("notice-detail");
+const housingNoticeSummaryEl = document.getElementById("housing-notice-summary");
+const viewBoard = document.getElementById("view-board");
+const viewNotice = document.getElementById("view-notice");
+const viewHousing = document.getElementById("view-housing");
+const appNav = document.getElementById("app-nav");
+const backToBoardBtn = document.getElementById("back-to-board");
+const backToNoticeBtn = document.getElementById("back-to-notice");
+const openHousingBtn = document.getElementById("open-housing-btn");
 const sidoSelect = document.getElementById("sido-select");
 const sigunguSelect = document.getElementById("sigungu-select");
 const typeFilters = document.getElementById("type-filters");
@@ -24,6 +32,7 @@ let notices = [];
 let currentNotice = null;
 let currentData = null;
 let selectedNoticeId = "";
+let currentView = "board";
 
 function showStatus(message, isError = false) {
   statusEl.hidden = !message;
@@ -119,13 +128,7 @@ function selectedStatusFilters() {
   );
 }
 
-function renderNoticeDetail(notice) {
-  if (!notice) {
-    noticeDetailEl.hidden = true;
-    noticeDetailEl.innerHTML = "";
-    return;
-  }
-
+function noticeDetailHtml(notice) {
   const status = computeScheduleStatus(notice);
   const applyStart = notice.applyStart || notice.postedOn;
   const applyPeriod =
@@ -136,8 +139,7 @@ function renderNoticeDetail(notice) {
     ? `<a class="notice-detail-link" href="${escapeHtml(notice.detailUrl)}" target="_blank" rel="noopener noreferrer">원문 보기</a>`
     : "";
 
-  noticeDetailEl.hidden = false;
-  noticeDetailEl.innerHTML = `
+  return `
     <div class="notice-detail-header">
       <span class="schedule-badge status-${status}">${status}</span>
       <h3 class="notice-detail-title">${escapeHtml(notice.title)}</h3>
@@ -151,11 +153,31 @@ function renderNoticeDetail(notice) {
   `;
 }
 
-function renderNoticeBoard(list, selectedId) {
+function renderNoticeDetail(notice) {
+  if (!notice) {
+    noticeDetailEl.innerHTML = "";
+    return;
+  }
+  noticeDetailEl.innerHTML = noticeDetailHtml(notice);
+}
+
+function renderHousingSummary(notice) {
+  if (!notice) {
+    housingNoticeSummaryEl.innerHTML = "";
+    return;
+  }
+  const status = computeScheduleStatus(notice);
+  housingNoticeSummaryEl.innerHTML = `
+    <span class="schedule-badge status-${status}">${status}</span>
+    <span class="housing-summary-title">${escapeHtml(notice.title)}</span>
+    <span class="housing-summary-meta">공고일 ${formatDateLabel(notice.postedOn)} · ${Number(notice.rowCount || 0).toLocaleString("ko-KR")}건</span>
+  `;
+}
+
+function renderNoticeBoard(list) {
   noticeBoardList.innerHTML = "";
   if (!list.length) {
     noticeBoardList.innerHTML = `<p class="notice-board-empty">선택한 조건에 맞는 공고가 없습니다.</p>`;
-    renderNoticeDetail(null);
     return;
   }
 
@@ -166,26 +188,37 @@ function renderNoticeBoard(list, selectedId) {
     button.className = "notice-board-item";
     button.dataset.id = notice.id;
     button.setAttribute("role", "option");
-    button.setAttribute("aria-selected", notice.id === selectedId ? "true" : "false");
-    if (notice.id === selectedId) button.classList.add("is-selected");
     button.innerHTML = `
       <span class="schedule-badge status-${status}">${status}</span>
       <span class="notice-board-date">${formatDateLabel(notice.postedOn)}</span>
       <span class="notice-board-title">${escapeHtml(notice.title)}</span>
     `;
-    button.addEventListener("click", () => selectNotice(notice.id));
+    button.addEventListener("click", () => openNotice(notice.id));
     noticeBoardList.appendChild(button);
   }
 }
 
-function selectNotice(id) {
-  selectedNoticeId = id;
-  for (const button of noticeBoardList.querySelectorAll(".notice-board-item")) {
-    const selected = button.dataset.id === id;
-    button.classList.toggle("is-selected", selected);
-    button.setAttribute("aria-selected", selected ? "true" : "false");
+function updateAppNav(view) {
+  currentView = view;
+  for (const step of appNav.querySelectorAll(".app-step")) {
+    const stepName = step.dataset.step;
+    step.classList.toggle("is-current", stepName === view);
+    step.classList.toggle("is-done", stepOrder(stepName) < stepOrder(view));
   }
-  loadNotice();
+}
+
+function stepOrder(view) {
+  if (view === "board") return 0;
+  if (view === "notice") return 1;
+  return 2;
+}
+
+function showView(view) {
+  viewBoard.hidden = view !== "board";
+  viewNotice.hidden = view !== "notice";
+  viewHousing.hidden = view !== "housing";
+  updateAppNav(view);
+  window.scrollTo({ top: 0, behavior: "smooth" });
 }
 
 function companies(year) {
@@ -304,7 +337,7 @@ function setupRangeFilters(rows) {
 
   depositMinInput.min = String(minDeposit);
   depositMaxInput.min = String(minDeposit);
-  depositMinInput.max = String(maxDeposit);
+  depositMaxInput.max = String(maxDeposit);
   depositMaxInput.max = String(maxDeposit);
   depositMinInput.value = String(minDeposit);
   depositMaxInput.value = String(maxDeposit);
@@ -455,37 +488,58 @@ function renderRegionFilters(rows) {
   fillSelect(sigunguSelect, sigunguValues, "전체");
 }
 
-async function loadNotice() {
-  const id = selectedNoticeId;
-  currentNotice = notices.find((n) => n.id === id);
-  if (!currentNotice) {
-    currentData = null;
-    renderNoticeDetail(null);
-    showStatus("해당 연도의 청약 공고가 없습니다.", true);
-    return;
-  }
-  renderNoticeDetail(currentNotice);
+async function fetchNoticeData(notice) {
   showStatus("공고 데이터를 불러오는 중입니다.");
+  openHousingBtn.disabled = true;
   try {
-    const res = await fetch(encodeURI(currentNotice.dataFile));
+    const res = await fetch(encodeURI(notice.dataFile));
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     currentData = await res.json();
     showStatus("");
-    renderRegionFilters(currentData.rows);
-    renderTypeFilters(currentData.rows, currentData.filterCols);
-    setupRangeFilters(currentData.rows);
-    dedupToggle.checked = false;
-    renderTable();
+    openHousingBtn.disabled = false;
+    return true;
   } catch (err) {
     currentData = null;
-    tableHead.innerHTML = "";
-    tableBody.innerHTML = "";
-    resultHeading.textContent = "주택 리스트 조회 (총 0건)";
     showStatus(`공고 데이터를 불러오지 못했습니다. ${err.message}`, true);
+    openHousingBtn.disabled = true;
+    return false;
   }
 }
 
-function refreshNoticeOptions({ keepNotice = false } = {}) {
+async function openNotice(id) {
+  selectedNoticeId = id;
+  currentNotice = notices.find((n) => n.id === id);
+  if (!currentNotice) {
+    showStatus("공고를 찾을 수 없습니다.", true);
+    return;
+  }
+
+  currentData = null;
+  renderNoticeDetail(currentNotice);
+  renderHousingSummary(currentNotice);
+  showView("notice");
+  showStatus("");
+  await fetchNoticeData(currentNotice);
+}
+
+async function openHousing() {
+  if (!currentNotice) return;
+  if (!currentData) {
+    const ok = await fetchNoticeData(currentNotice);
+    if (!ok) return;
+  }
+
+  renderHousingSummary(currentNotice);
+  renderRegionFilters(currentData.rows);
+  renderTypeFilters(currentData.rows, currentData.filterCols);
+  setupRangeFilters(currentData.rows);
+  dedupToggle.checked = false;
+  renderTable();
+  showView("housing");
+  showStatus("");
+}
+
+function refreshBoard() {
   const year = yearSelect.value;
   const companyOptions = companies(year);
   const previousCompany = companySelect.value;
@@ -495,28 +549,49 @@ function refreshNoticeOptions({ keepNotice = false } = {}) {
   fillSelect(companySelect, companyOptions, company);
 
   const list = noticesFor(year, companySelect.value);
-  const previousNotice = keepNotice ? selectedNoticeId : "";
-  selectedNoticeId = list.some((n) => n.id === previousNotice) ? previousNotice : list[0]?.id || "";
+  renderNoticeBoard(list);
 
-  renderNoticeBoard(list, selectedNoticeId);
-
-  if (!list.length) {
-    currentNotice = null;
-    currentData = null;
-    tableHead.innerHTML = "";
-    tableBody.innerHTML = "";
-    resultHeading.textContent = "주택 리스트 조회 (총 0건)";
+  if (!list.length && currentView === "board") {
     showStatus("선택한 상태 조건에 맞는 공고가 없습니다.", true);
-    return;
+  } else if (currentView === "board") {
+    showStatus("");
   }
-
-  showStatus("");
-  loadNotice();
 }
 
 function bindEvents() {
-  yearSelect.addEventListener("change", () => refreshNoticeOptions());
-  companySelect.addEventListener("change", () => refreshNoticeOptions());
+  yearSelect.addEventListener("change", refreshBoard);
+  companySelect.addEventListener("change", refreshBoard);
+  backToBoardBtn.addEventListener("click", () => {
+    showView("board");
+    showStatus("");
+  });
+  backToNoticeBtn.addEventListener("click", () => {
+    if (currentNotice) renderNoticeDetail(currentNotice);
+    showView("notice");
+    showStatus("");
+  });
+  openHousingBtn.addEventListener("click", () => openHousing());
+
+  for (const step of appNav.querySelectorAll(".app-step")) {
+    step.addEventListener("click", () => {
+      const target = step.dataset.step;
+      if (target === "board") {
+        showView("board");
+        showStatus("");
+        return;
+      }
+      if (target === "notice" && currentNotice) {
+        renderNoticeDetail(currentNotice);
+        showView("notice");
+        showStatus("");
+        return;
+      }
+      if (target === "housing" && currentNotice && currentData) {
+        openHousing();
+      }
+    });
+  }
+
   sidoSelect.addEventListener("change", () => {
     if (!currentData) return;
     const sido = sidoSelect.value;
@@ -536,12 +611,13 @@ function bindEvents() {
   depositMaxInput.addEventListener("input", renderTable);
   dedupToggle.addEventListener("change", renderTable);
   for (const input of document.querySelectorAll('input[name="status-filter"]')) {
-    input.addEventListener("change", () => refreshNoticeOptions({ keepNotice: false }));
+    input.addEventListener("change", refreshBoard);
   }
 }
 
 async function init() {
   bindEvents();
+  showView("board");
   try {
     const res = await fetch("data/index.json");
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
@@ -552,7 +628,7 @@ async function init() {
       return;
     }
     fillSelect(yearSelect, years(), years()[0]);
-    refreshNoticeOptions();
+    refreshBoard();
   } catch (err) {
     showStatus(`공고 목록을 불러오지 못했습니다. ${err.message}`, true);
   }
