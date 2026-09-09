@@ -61,11 +61,28 @@ python scripts/crawl_sh.py --lookback-days 90 --max-new 20
 
 ## Cloudflare Pages 배포
 
-정적 사이트이므로 **Cloudflare Pages**에 `web/`을 올립니다. `*.pages.dev` 주소는 Pages 프로젝트에 **성공한 배포가 1회 이상** 있어야 열립니다. 프로젝트만 만들고 배포가 없으면 `HTTP ERROR 404`가 납니다.
+정적 사이트 파일은 `web/` 아래에만 있습니다. 저장소 루트(`/`)에는 `index.html`이 없습니다.
+
+### 루트 404 증상 (현재 상태)
+
+배포는 됐는데 `https://housing-subscription-notice-viewer.pages.dev/`만 404이고,  
+`https://housing-subscription-notice-viewer.pages.dev/web/index.html`은 열리면 **출력 디렉터리 설정 문제**입니다.
+
+저장소 전체가 사이트 루트로 올라가서, 페이지가 `/web/` 경로 아래에 붙은 상태입니다.
+
+Cloudflare Pages **Settings → Builds**에서 아래 **둘 중 하나**로 맞춘 뒤 **Retry deployment** 하세요.
+
+| | Root directory | Build output directory |
+|---|---|---|
+| **A** | `web` | `/` (또는 비움) |
+| **B** | `/` (또는 비움) | `web` |
+
+- Build command: 비움
+- Framework preset: None
 
 ### 방법 A: GitHub Actions (권장)
 
-`.github/workflows/deploy-pages.yml`이 `main` 브랜치의 `web/` 변경 시 Pages에 배포합니다.
+`.github/workflows/deploy-pages.yml`이 `web/` **폴더 내용만** Pages 루트에 올립니다 (`npx wrangler pages deploy web`). 대시보드 디렉터리 설정과 무관하게 올바른 경로로 배포됩니다.
 
 GitHub 저장소 **Settings → Secrets and variables → Actions**에 아래 시크릿을 등록합니다.
 
@@ -87,14 +104,9 @@ npx wrangler pages deploy web --project-name=housing-subscription-notice-viewer
 
 ### 방법 C: Cloudflare 대시보드 Git 연동
 
-Workers Builds가 아니라 **Pages → Create project → Connect to Git**으로 연결합니다.
+Workers Builds가 아니라 **Pages → Create project → Connect to Git**으로 연결합니다. 위 **루트 404 증상** 표의 A 또는 B 설정을 반드시 적용하세요.
 
-- Framework preset: None
-- Build command: 비움
-- Build output directory: `web`
-- Root directory: `/`
-
-`npx wrangler deploy`(Workers)는 `*.workers.dev`로만 배포되며 `*.pages.dev`를 채우지 않습니다. Pages로 옮긴 뒤에는 Workers Builds 설정을 끄거나 deploy 명령을 위 Pages 명령으로 바꿔야 합니다.
+`npx wrangler deploy`(Workers)는 `*.workers.dev`로만 배포되며 `*.pages.dev`를 채우지 않습니다. Pages로 옮긴 뒤에는 Workers Builds 설정을 끄거나 deploy 명령을 Pages용으로 바꿔야 합니다.
 
 ## 구성
 
