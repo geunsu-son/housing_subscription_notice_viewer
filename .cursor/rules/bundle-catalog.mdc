@@ -1,0 +1,125 @@
+---
+description: Agent Skill Bundle 저장소에서 에이전트 번들의 설치·업데이트·삭제·보관을 판단할 때 적용하는 총관리 원칙
+alwaysApply: false
+---
+
+# Bundle Catalog Rule
+
+## 목적
+
+**에이전트 번들(Agent Bundle)** 이 많아질수록, 어떤 번들을 가져오고·유지하고·업데이트하고·삭제할지 일관되게 판단한다.
+
+이 Rule은 번들을 새로 만드는 방법이 아니라, **현재 작업 중인 저장소의 `.cursor/`에 어떤 번들을 두고 어떻게 관리할지**를 정한다. 번들 선택의 **gate** 역할을 한다.
+
+Bundle Catalog gate는 **하나의 번들**이며, 이 Rule과 아래 **하위 Skill**(`audit-installed-bundles`, `manage-agent-bundles`, `report-bundle-feedback`)로 구성된다. Issue 피드백은 별도 번들이 아니라 총관리 Rule의 하위 Skill이다.
+
+## 용어
+
+- **Agent 작업 아이디어**: Agent에게 맡길 작업과 기대 결과에 대한 생각
+- **에이전트 번들(번들)**: 하나의 Agent 작업 아이디어를 실행 가능하게 묶은 단위. Rule과 Skill을 중심으로 Script, Automation을 필요한 만큼 포함한다.
+- **구성 요소(artifact)**: 번들 안의 Rule, Skill, Script, Automation
+- **번들 소스**: 번들 원본이 있는 Agent Skill Bundle 저장소
+- **소스 catalog**: 번들 소스의 `workshop-kit/catalog.md`. 가져올 수 있는 번들 목록
+- **로컬 catalog**: 현재 저장소의 `.cursor/agent-bundles/catalog.md`. 설치된 번들 목록
+- **공방 키트 번들**: 공방 운영·총관리용 번들
+- **예시 번들**: 특정 업무를 시험하는 번들
+- **설치**: 번들의 Rule·Skill 등을 현재 저장소의 `.cursor/`에 두어 Cursor가 읽게 하는 것
+- **활성 번들**: 현재 `.cursor/`에 설치되어 사용 중인 번들
+- **gate**: Bundle Catalog가 설치 상태를 확인하고 다음 번들 선택을 받는 관문
+- **피드백 참여**: 연결 turn에 사용자가 정한, 번들 개선 Issue 전송 여부 (`enabled` / `disabled`)
+- **피드백 gate**: Issue 전송 전 사용자 승인을 받는 관문 (1차: 보낼지, 2차: 초안 확인 후 전송)
+
+## gate 원칙
+
+- Agent Skill Bundle **연결 요청**이 들어온 그 turn 안에서만 **총괄 rule(Bundle Catalog gate) 선설치 → 설치 상태 조사 → (필요 시) 설치할 번들 질문** 순서로 진행한다.
+- 적용 여부를 추정하지 않는다. `audit-installed-bundles` Skill로 `.cursor/`와 catalog를 먼저 조사한다.
+- 번들 소스 저장소를 통째로 clone하지 않는다. 필요한 번들 파일만 현재 저장소 `.cursor/`로 가져온다.
+- gate가 없거나 `partial`이면 Bundle Catalog 번들을 먼저 보완한다.
+- **연결 turn**에서 사용자가 추가 번들을 고르거나 “지금은 추가하지 않음”으로 끝낸 뒤에는, 사용자가 명시적으로 추가 설치·gate·번들 연결을 요청하기 전까지 추가 번들 설치를 다시 묻지 않는다.
+- 조사만 요청된 경우(`audit-installed-bundles`)에는 상태만 보고하고 설치 질문을 덧붙이지 않는다.
+- 예시 번들은 사용자가 실제로 그 업무를 수행하려 할 때만 gate를 통해 설치한다.
+- **연결 turn**에서 번들 개선 **피드백 참여 여부**를 한 번 묻고 `.cursor/agent-bundles/catalog.md`에 `enabled` 또는 `disabled`로 기록한다.
+- `disabled`이면 작업 완료·Skill 사용 PR 이후에도 피드백 전송을 묻지 않는다.
+- `enabled`이면 **작업 완료** 또는 **번들 Skill을 사용한 PR 작성** 시에만 `report-bundle-feedback` Skill로 1차 gate를 연다.
+- Issue 전송은 **초안 공개 → 2차 승인** 후에만 수행한다. 승인 없이 Issue를 만들지 않는다.
+
+## 피드백 원칙
+
+### 보낼 내용 (중심)
+
+- Skill·Rule·gate에 **추가·개선하면 좋겠다는 제안**
+- **그렇게 제안하는 이유**
+- (선택) 사용한 번들명, 도움이 된 점
+
+### 보내지 않을 내용
+
+- API key, token, password, cookie
+- 내부 전용 URL·IP, 고객·개인 식별 정보, 민감 업무 데이터
+- consumer repo 소스 코드 전체·대용량 로그
+- 사용자가 제외를 요청한 내용
+
+### 전송 실패
+
+- Issue 자동 생성에 실패하면, 초안과 Issue 작성 URL을 **정중히 한 번** 안내할 수 있다.
+- 직접 Issue 작성은 **선택**이며 재촉·강요하지 않는다.
+
+## 관리 원칙
+
+- 하나의 Agent 작업 아이디어는 하나의 번들로 대응한다. 범위가 겹치면 새 번들을 만들기 전에 기존 번들 확장을 검토한다.
+- 번들 소스와 현재 저장소의 실행 위치를 구분한다. 원본은 번들 소스에, 실행본은 `.cursor/`에 둔다.
+- 삭제보다 **보관(archive)** 을 우선한다. `archived` 상태의 번들은 `.cursor/`에서 제거하되 로컬 catalog 기록은 남긴다.
+- 업데이트는 해당 번들을 계속 쓸 때만 번들 소스에서 다시 가져온다.
+- 설치·삭제·업데이트 후 `audit-installed-bundles`로 다시 조사하고 로컬 catalog를 갱신한다.
+
+## 판단 기준
+
+### gate 선설치
+
+- Agent Skill Bundle 연결·점검·추가 설치 요청이 들어오면 Bundle Catalog gate가 `installed`인지 먼저 확인한다.
+- `missing` 또는 `partial`이면 Bundle Catalog 번들을 번들 소스에서 가져와 보완한다.
+
+### 설치 상태 조사
+
+- gate 보완 직후, 또는 추가 설치·업데이트·삭제 전에 `audit-installed-bundles` Skill을 실행한다.
+- 조사 결과를 바탕으로 이미 설치된 번들, 불일치, 미설치 후보를 구분한다.
+
+### gate 이후 설치
+
+- Bundle Catalog gate가 `installed`이다.
+- **연결 요청 turn**이거나, 사용자가 **추가 설치·gate·번들 연결**을 명시적으로 요청했다.
+- 사용자가 설치할 번들을 선택했거나, 요청에 설치할 번들이 이미 지정되어 있다.
+- 같은 목적의 활성 번들이 `.cursor/`에 없다.
+
+### 업데이트
+
+- 해당 번들이 조사 결과에서 `installed` 또는 `partial`이다.
+- 번들 소스에 더 새로운 원본이 있고, 계속 사용할 번들이다.
+
+### 삭제 또는 제거
+
+- 더 이상 해당 Agent 작업을 수행하지 않는다.
+- 다른 번들로 대체되었다.
+- `archived`로 보관하기로 했다.
+
+## 금지 패턴
+
+- 설치 상태 조사 없이 번들 설치·삭제를 진행하지 않는다.
+- 작업 중인 저장소에 번들 소스 저장소 전체를 clone하지 않는다.
+- gate 없이 소스 catalog의 모든 번들을 한 번에 설치하지 않는다.
+- Bundle Catalog gate보다 다른 번들만 먼저 설치하지 않는다.
+- 목적이 겹치는 번들을 `.cursor/`에 동시에 설치하지 않는다.
+- 검증되지 않은 예시 번들을 `alwaysApply: true` Rule로 설치하지 않는다.
+- 로컬 catalog 갱신 없이 설치·삭제·업데이트하지 않는다.
+- 연결·추가 설치 요청이 없는데 번들 추가 설치를 다시 묻지 않는다.
+- 조사 요청에 설치 권유를 덧붙이지 않는다.
+- 피드백 `disabled`인데 개선 Issue 전송을 묻지 않는다.
+- 2차 gate 없이 Issue를 생성하지 않는다.
+- Issue 전송 실패 후 사용자에게 반복적으로 작성을 요구하지 않는다.
+- 민감 정보가 포함된 Issue 초안을 사용자 확인 없이 보내지 않는다.
+
+## 완료 기준
+
+- Bundle Catalog gate가 `installed` 상태다.
+- 요청 범위 안의 작업만 반영되었다.
+- 연결 turn이었다면 그 turn 안에서 선택·설치·거절이 끝났다.
+- 로컬 catalog와 조사 결과가 일치한다.
