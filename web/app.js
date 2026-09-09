@@ -3,6 +3,7 @@ const DEPOSIT_STEP = 10_000_000;
 
 const yearSelect = document.getElementById("year-select");
 const companySelect = document.getElementById("company-select");
+const regionSelect = document.getElementById("region-select");
 const noticeBoardList = document.getElementById("notice-board-list");
 const noticeDetailEl = document.getElementById("notice-detail");
 const viewBoard = document.getElementById("view-board");
@@ -175,8 +176,8 @@ function renderNoticeBoard(list) {
     button.innerHTML = `
       <span class="notice-board-company">${escapeHtml(notice.company || "")}</span>
       <span class="notice-board-region">${escapeHtml(notice.regions || "")}</span>
-      <span class="notice-board-period">${escapeHtml(formatApplyPeriod(notice, { fallbackPostedOn: false }))}</span>
       <span class="notice-board-title">${escapeHtml(notice.title)}</span>
+      <span class="notice-board-period">${escapeHtml(formatApplyPeriod(notice, { fallbackPostedOn: false }))}</span>
     `;
     button.addEventListener("click", () => openNotice(notice.id));
     noticeBoardList.appendChild(button);
@@ -199,14 +200,33 @@ function showView(view) {
   window.scrollTo({ top: 0, behavior: "smooth" });
 }
 
+function noticeRegions(notice) {
+  if (!notice.regions) return [];
+  return notice.regions
+    .split(",")
+    .map((value) => value.trim())
+    .filter(Boolean);
+}
+
 function companies(year) {
   return unique(notices.filter((n) => n.year === year).map((n) => n.company));
 }
 
-function noticesFor(year, company) {
+function regionsFor(year, company) {
+  const values = new Set();
+  for (const notice of notices.filter((n) => n.year === year && n.company === company)) {
+    for (const region of noticeRegions(notice)) {
+      values.add(region);
+    }
+  }
+  return sortValues([...values]);
+}
+
+function noticesFor(year, company, region = "전체") {
   const activeStatuses = selectedStatusFilters();
   return notices
     .filter((n) => n.year === year && n.company === company)
+    .filter((n) => region === "전체" || noticeRegions(n).includes(region))
     .filter((n) => activeStatuses.has(computeScheduleStatus(n)))
     .sort((a, b) => {
       const aDate = parseDateValue(a.postedOn || a.sourceFile)?.getTime() || 0;
@@ -518,11 +538,18 @@ function refreshBoard() {
     : companyOptions[0];
   fillSelect(companySelect, companyOptions, company);
 
-  const list = noticesFor(year, companySelect.value);
+  const regionOptions = regionsFor(year, companySelect.value);
+  const previousRegion = regionSelect.value;
+  const region = previousRegion === "전체" || regionOptions.includes(previousRegion)
+    ? previousRegion
+    : "전체";
+  fillSelect(regionSelect, ["전체", ...regionOptions], region);
+
+  const list = noticesFor(year, companySelect.value, regionSelect.value);
   renderNoticeBoard(list);
 
   if (!list.length && currentView === "board") {
-    showStatus("선택한 상태 조건에 맞는 공고가 없습니다.", true);
+    showStatus("선택한 조건에 맞는 공고가 없습니다.", true);
   } else if (currentView === "board") {
     showStatus("");
   }
@@ -531,6 +558,7 @@ function refreshBoard() {
 function bindEvents() {
   yearSelect.addEventListener("change", refreshBoard);
   companySelect.addEventListener("change", refreshBoard);
+  regionSelect.addEventListener("change", refreshBoard);
   backToBoardBtn.addEventListener("click", () => {
     showView("board");
     showStatus("");

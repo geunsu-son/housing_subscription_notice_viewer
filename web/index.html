@@ -40,6 +40,10 @@
             주택공사
             <select id="company-select"></select>
           </label>
+          <label>
+            지역
+            <select id="region-select"></select>
+          </label>
           <fieldset class="status-filters">
             <legend>공고 상태</legend>
             <label><input type="checkbox" name="status-filter" value="신청전" checked /> 신청전</label>
@@ -49,10 +53,10 @@
         </div>
         <div class="notice-board" role="listbox" aria-label="공고 목록">
           <div class="notice-board-head" aria-hidden="true">
-            <span>구분</span>
+            <span>주택공사</span>
             <span>지역</span>
-            <span>신청기간</span>
             <span>공고명</span>
+            <span>신청기간</span>
           </div>
           <div id="notice-board-list" class="notice-board-list"></div>
         </div>
