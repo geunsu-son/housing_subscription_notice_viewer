@@ -46,49 +46,6 @@ main {
   color: var(--muted);
 }
 
-.app-nav {
-  margin-bottom: 1rem;
-}
-
-.app-steps {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-  list-style: none;
-  margin: 0;
-  padding: 0;
-}
-
-.app-step {
-  display: inline-flex;
-  align-items: center;
-  padding: 0.45rem 0.85rem;
-  border-radius: 999px;
-  border: 1px solid var(--line);
-  background: #f8fafc;
-  color: var(--muted);
-  font-size: 0.85rem;
-  font-weight: 600;
-  cursor: default;
-}
-
-.app-step.is-done {
-  cursor: pointer;
-  color: var(--text);
-  border-color: #cbd5e1;
-}
-
-.app-step.is-done:hover {
-  background: #eef2f7;
-}
-
-.app-step.is-current {
-  background: var(--notice-bg);
-  border-color: #f3d48a;
-  color: var(--notice);
-  cursor: default;
-}
-
 .app-view[hidden] {
   display: none !important;
 }
