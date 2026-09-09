@@ -59,17 +59,42 @@ python scripts/crawl_sh.py --lookback-days 90 --max-new 20
 - 이미 `scripts/sh-crawl-state.json`에 있는 공고는 건너뜁니다.
 - GitHub Actions `Crawl SH rental notices`가 매주 월요일 07:30 KST에 같은 명령을 돌리고, 새 데이터가 있으면 커밋합니다.
 
-## Cloudflare 배포
+## Cloudflare Pages 배포
 
-`wrangler.toml`이 `web/`을 정적 에셋으로 올립니다. 배포 명령은 `npx wrangler deploy`입니다.
+정적 사이트이므로 **Cloudflare Pages**에 `web/`을 올립니다. `*.pages.dev` 주소는 Pages 프로젝트에 **성공한 배포가 1회 이상** 있어야 열립니다. 프로젝트만 만들고 배포가 없으면 `HTTP ERROR 404`가 납니다.
 
-대시보드에서 아래처럼 두면 됩니다.
+### 방법 A: GitHub Actions (권장)
 
+`.github/workflows/deploy-pages.yml`이 `main` 브랜치의 `web/` 변경 시 Pages에 배포합니다.
+
+GitHub 저장소 **Settings → Secrets and variables → Actions**에 아래 시크릿을 등록합니다.
+
+| 시크릿 | 값 |
+|---|---|
+| `CLOUDFLARE_API_TOKEN` | Cloudflare API 토큰 (`Account` → `Cloudflare Pages` → `Edit` 권한) |
+| `CLOUDFLARE_ACCOUNT_ID` | Cloudflare 대시보드 URL의 Account ID |
+
+시크릿 등록 후 Actions 탭에서 **Deploy to Cloudflare Pages** 워크플로를 `workflow_dispatch`로 한 번 실행하거나, `main`에 푸시하면 배포됩니다.
+
+배포 URL: `https://housing-subscription-notice-viewer.pages.dev/`
+
+### 방법 B: 로컬에서 수동 배포
+
+```bash
+npx wrangler login
+npx wrangler pages deploy web --project-name=housing-subscription-notice-viewer
+```
+
+### 방법 C: Cloudflare 대시보드 Git 연동
+
+Workers Builds가 아니라 **Pages → Create project → Connect to Git**으로 연결합니다.
+
+- Framework preset: None
 - Build command: 비움
-- Deploy command: `npx wrangler deploy`
-- Python/`pip install`은 쓰지 않음 (루트에 `requirements.txt`를 두지 않음)
+- Build output directory: `web`
+- Root directory: `/`
 
-Pages만 쓰는 경우에는 배포 명령을 `npx wrangler pages deploy web`으로 바꾸면 됩니다.
+`npx wrangler deploy`(Workers)는 `*.workers.dev`로만 배포되며 `*.pages.dev`를 채우지 않습니다. Pages로 옮긴 뒤에는 Workers Builds 설정을 끄거나 deploy 명령을 위 Pages 명령으로 바꿔야 합니다.
 
 ## 구성
 
