@@ -31,17 +31,24 @@
             주택공사
             <select id="company-select"></select>
           </label>
-          <label>
-            청약 공고
-            <select id="notice-select"></select>
-          </label>
-          <div id="notice-schedule" class="notice-schedule" hidden></div>
           <fieldset class="status-filters">
             <legend>공고 상태</legend>
             <label><input type="checkbox" name="status-filter" value="신청전" checked /> 신청전</label>
             <label><input type="checkbox" name="status-filter" value="진행중" checked /> 진행중</label>
             <label><input type="checkbox" name="status-filter" value="마감" checked /> 마감</label>
           </fieldset>
+          <div class="notice-board-wrap">
+            <div class="notice-board-label">청약 공고</div>
+            <div class="notice-board" role="listbox" aria-label="청약 공고 목록">
+              <div class="notice-board-head" aria-hidden="true">
+                <span>상태</span>
+                <span>공고일</span>
+                <span>공고명</span>
+              </div>
+              <div id="notice-board-list" class="notice-board-list"></div>
+            </div>
+            <div id="notice-detail" class="notice-detail" hidden></div>
+          </div>
         </section>
 
         <section class="panel panel-filter" aria-labelledby="filter-heading">

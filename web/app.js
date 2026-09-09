@@ -3,7 +3,8 @@ const DEPOSIT_STEP = 10_000_000;
 
 const yearSelect = document.getElementById("year-select");
 const companySelect = document.getElementById("company-select");
-const noticeSelect = document.getElementById("notice-select");
+const noticeBoardList = document.getElementById("notice-board-list");
+const noticeDetailEl = document.getElementById("notice-detail");
 const sidoSelect = document.getElementById("sido-select");
 const sigunguSelect = document.getElementById("sigungu-select");
 const typeFilters = document.getElementById("type-filters");
@@ -14,7 +15,6 @@ const depositMaxInput = document.getElementById("deposit-max");
 const areaValues = document.getElementById("area-values");
 const depositValues = document.getElementById("deposit-values");
 const dedupToggle = document.getElementById("dedup-toggle");
-const noticeScheduleEl = document.getElementById("notice-schedule");
 const resultHeading = document.getElementById("result-heading");
 const tableHead = document.querySelector("#result-table thead");
 const tableBody = document.querySelector("#result-table tbody");
@@ -23,6 +23,7 @@ const statusEl = document.getElementById("status");
 let notices = [];
 let currentNotice = null;
 let currentData = null;
+let selectedNoticeId = "";
 
 function showStatus(message, isError = false) {
   statusEl.hidden = !message;
@@ -118,29 +119,73 @@ function selectedStatusFilters() {
   );
 }
 
-function noticeLabel(notice) {
-  return `[${computeScheduleStatus(notice)}] ${notice.title}`;
-}
-
-function renderNoticeSchedule(notice) {
+function renderNoticeDetail(notice) {
   if (!notice) {
-    noticeScheduleEl.hidden = true;
-    noticeScheduleEl.innerHTML = "";
+    noticeDetailEl.hidden = true;
+    noticeDetailEl.innerHTML = "";
     return;
   }
+
   const status = computeScheduleStatus(notice);
   const applyStart = notice.applyStart || notice.postedOn;
   const applyPeriod =
     applyStart || notice.applyEnd
       ? `${formatDateLabel(applyStart)} ~ ${formatDateLabel(notice.applyEnd)}`
       : "신청기간 정보 없음";
+  const detailLink = notice.detailUrl
+    ? `<a class="notice-detail-link" href="${escapeHtml(notice.detailUrl)}" target="_blank" rel="noopener noreferrer">원문 보기</a>`
+    : "";
 
-  noticeScheduleEl.hidden = false;
-  noticeScheduleEl.innerHTML = `
-    <span class="schedule-badge status-${status}">${status}</span>
-    <span class="schedule-line">공고일: ${formatDateLabel(notice.postedOn)}</span>
-    <span class="schedule-line">신청기간: ${escapeHtml(applyPeriod)}</span>
+  noticeDetailEl.hidden = false;
+  noticeDetailEl.innerHTML = `
+    <div class="notice-detail-header">
+      <span class="schedule-badge status-${status}">${status}</span>
+      <h3 class="notice-detail-title">${escapeHtml(notice.title)}</h3>
+    </div>
+    <dl class="notice-detail-meta">
+      <div><dt>공고일</dt><dd>${formatDateLabel(notice.postedOn)}</dd></div>
+      <div><dt>신청기간</dt><dd>${escapeHtml(applyPeriod)}</dd></div>
+      <div><dt>주택 수</dt><dd>${Number(notice.rowCount || 0).toLocaleString("ko-KR")}건</dd></div>
+    </dl>
+    ${detailLink}
   `;
+}
+
+function renderNoticeBoard(list, selectedId) {
+  noticeBoardList.innerHTML = "";
+  if (!list.length) {
+    noticeBoardList.innerHTML = `<p class="notice-board-empty">선택한 조건에 맞는 공고가 없습니다.</p>`;
+    renderNoticeDetail(null);
+    return;
+  }
+
+  for (const notice of list) {
+    const status = computeScheduleStatus(notice);
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "notice-board-item";
+    button.dataset.id = notice.id;
+    button.setAttribute("role", "option");
+    button.setAttribute("aria-selected", notice.id === selectedId ? "true" : "false");
+    if (notice.id === selectedId) button.classList.add("is-selected");
+    button.innerHTML = `
+      <span class="schedule-badge status-${status}">${status}</span>
+      <span class="notice-board-date">${formatDateLabel(notice.postedOn)}</span>
+      <span class="notice-board-title">${escapeHtml(notice.title)}</span>
+    `;
+    button.addEventListener("click", () => selectNotice(notice.id));
+    noticeBoardList.appendChild(button);
+  }
+}
+
+function selectNotice(id) {
+  selectedNoticeId = id;
+  for (const button of noticeBoardList.querySelectorAll(".notice-board-item")) {
+    const selected = button.dataset.id === id;
+    button.classList.toggle("is-selected", selected);
+    button.setAttribute("aria-selected", selected ? "true" : "false");
+  }
+  loadNotice();
 }
 
 function companies(year) {
@@ -411,15 +456,15 @@ function renderRegionFilters(rows) {
 }
 
 async function loadNotice() {
-  const id = noticeSelect.value;
+  const id = selectedNoticeId;
   currentNotice = notices.find((n) => n.id === id);
   if (!currentNotice) {
     currentData = null;
-    renderNoticeSchedule(null);
+    renderNoticeDetail(null);
     showStatus("해당 연도의 청약 공고가 없습니다.", true);
     return;
   }
-  renderNoticeSchedule(currentNotice);
+  renderNoticeDetail(currentNotice);
   showStatus("공고 데이터를 불러오는 중입니다.");
   try {
     const res = await fetch(encodeURI(currentNotice.dataFile));
@@ -450,37 +495,28 @@ function refreshNoticeOptions({ keepNotice = false } = {}) {
   fillSelect(companySelect, companyOptions, company);
 
   const list = noticesFor(year, companySelect.value);
-  const previousNotice = keepNotice ? noticeSelect.value : "";
-  const selected = list.some((n) => n.id === previousNotice) ? previousNotice : list[0]?.id;
-  noticeSelect.innerHTML = "";
+  const previousNotice = keepNotice ? selectedNoticeId : "";
+  selectedNoticeId = list.some((n) => n.id === previousNotice) ? previousNotice : list[0]?.id || "";
+
+  renderNoticeBoard(list, selectedNoticeId);
+
   if (!list.length) {
-    const option = document.createElement("option");
-    option.value = "";
-    option.textContent = "선택 가능한 공고가 없습니다";
-    noticeSelect.appendChild(option);
     currentNotice = null;
     currentData = null;
-    renderNoticeSchedule(null);
     tableHead.innerHTML = "";
     tableBody.innerHTML = "";
     resultHeading.textContent = "주택 리스트 조회 (총 0건)";
     showStatus("선택한 상태 조건에 맞는 공고가 없습니다.", true);
     return;
   }
-  for (const notice of list) {
-    const option = document.createElement("option");
-    option.value = notice.id;
-    option.textContent = noticeLabel(notice);
-    if (notice.id === selected) option.selected = true;
-    noticeSelect.appendChild(option);
-  }
+
+  showStatus("");
   loadNotice();
 }
 
 function bindEvents() {
   yearSelect.addEventListener("change", () => refreshNoticeOptions());
   companySelect.addEventListener("change", () => refreshNoticeOptions());
-  noticeSelect.addEventListener("change", () => loadNotice());
   sidoSelect.addEventListener("change", () => {
     if (!currentData) return;
     const sido = sidoSelect.value;
