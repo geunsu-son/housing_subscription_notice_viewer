@@ -2983,9 +2983,127 @@
       "closes_on": "2025.08.19",
       "status": "접수마감",
       "title": "25년 2차 수시 청년 예비입주자 모집공고(인천,부천)"
+    },
+    "2015122300020731": {
+      "title": "[온라인 접수 불가, 관할 주거복지지사 현장접수] 경기남부지역본부 2026년 일반 매입임대주택 입주자 모집공고",
+      "posted_on": "2026.09.10",
+      "closes_on": "2026.09.23",
+      "status": "공고중",
+      "source_file": "2026.09.10 LH 온라인 접수 불가, 관할 주거복지지사 현장접수 경기남부지역본부 2026년 일반 매입임대주택 입주자 모집공고.xlsx",
+      "row_count": 381,
+      "detail_url": "https://apply.lh.or.kr/lhapply/apply/wt/wrtanc/selectWrtancInfo.do?panId=2015122300020731&ccrCnntSysDsCd=03&uppAisTpCd=13&aisTpCd=26&mi=1026",
+      "source_url": "https://apply.lh.or.kr/lhapply/apply/wt/wrtanc/selectWrtancList.do?mi=1026",
+      "fetched_at": "2026-09-13T23:59:25"
+    },
+    "2015122300020723": {
+      "title": "[경남지역본부]26년 3차 신혼·신생아매입임대Ⅱ(전세형) 예비입주자 모집공고",
+      "posted_on": "2026.09.10",
+      "closes_on": "2026.09.23",
+      "status": "공고중",
+      "source_file": "2026.09.10 LH 경남지역본부 26년 3차 신혼·신생아매입임대Ⅱ(전세형) 예비입주자 모집공고.xlsx",
+      "row_count": 23,
+      "detail_url": "https://apply.lh.or.kr/lhapply/apply/wt/wrtanc/selectWrtancInfo.do?panId=2015122300020723&ccrCnntSysDsCd=03&uppAisTpCd=13&aisTpCd=26&mi=1026",
+      "source_url": "https://apply.lh.or.kr/lhapply/apply/wt/wrtanc/selectWrtancList.do?mi=1026",
+      "fetched_at": "2026-09-13T23:59:28"
+    },
+    "2015122300020722": {
+      "title": "[경남지역본부]26년 3차 신혼·신생아매입임대Ⅰ 예비입주자 모집공고",
+      "posted_on": "2026.09.10",
+      "closes_on": "2026.09.23",
+      "status": "공고중",
+      "source_file": "2026.09.10 LH 경남지역본부 26년 3차 신혼·신생아매입임대Ⅰ 예비입주자 모집공고.xlsx",
+      "row_count": 75,
+      "detail_url": "https://apply.lh.or.kr/lhapply/apply/wt/wrtanc/selectWrtancInfo.do?panId=2015122300020722&ccrCnntSysDsCd=03&uppAisTpCd=13&aisTpCd=26&mi=1026",
+      "source_url": "https://apply.lh.or.kr/lhapply/apply/wt/wrtanc/selectWrtancList.do?mi=1026",
+      "fetched_at": "2026-09-13T23:59:30"
+    },
+    "2015122300020717": {
+      "title": "[경남지역본부]26년 3차 청년매입임대 예비입주자 모집공고",
+      "posted_on": "2026.09.10",
+      "closes_on": "2026.09.23",
+      "status": "공고중",
+      "source_file": "2026.09.10 LH 경남지역본부 26년 3차 청년매입임대 예비입주자 모집공고.xlsx",
+      "row_count": 51,
+      "detail_url": "https://apply.lh.or.kr/lhapply/apply/wt/wrtanc/selectWrtancInfo.do?panId=2015122300020717&ccrCnntSysDsCd=03&uppAisTpCd=13&aisTpCd=26&mi=1026",
+      "source_url": "https://apply.lh.or.kr/lhapply/apply/wt/wrtanc/selectWrtancList.do?mi=1026",
+      "fetched_at": "2026-09-13T23:59:33"
+    },
+    "2015122300020720": {
+      "title": "[경남지역본부]26년 3차 비분양전환형 든든전세주택 입주자 모집 공고",
+      "posted_on": "2026.09.10",
+      "closes_on": "2026.09.23",
+      "status": "공고중",
+      "source_file": "2026.09.10 LH 경남지역본부 26년 3차 비분양전환형 든든전세주택 입주자 모집 공고.xlsx",
+      "row_count": 36,
+      "detail_url": "https://apply.lh.or.kr/lhapply/apply/wt/wrtanc/selectWrtancInfo.do?panId=2015122300020720&ccrCnntSysDsCd=03&uppAisTpCd=13&aisTpCd=26&mi=1026",
+      "source_url": "https://apply.lh.or.kr/lhapply/apply/wt/wrtanc/selectWrtancList.do?mi=1026",
+      "fetched_at": "2026-09-13T23:59:36"
+    },
+    "2015122300020721": {
+      "title": "[경남지역본부]26년 3차 분양전환형 든든전세주택 예비입주자 모집 공고",
+      "posted_on": "2026.09.10",
+      "closes_on": "2026.09.23",
+      "status": "공고중",
+      "source_file": "2026.09.10 LH 경남지역본부 26년 3차 분양전환형 든든전세주택 예비입주자 모집 공고.xlsx",
+      "row_count": 123,
+      "detail_url": "https://apply.lh.or.kr/lhapply/apply/wt/wrtanc/selectWrtancInfo.do?panId=2015122300020721&ccrCnntSysDsCd=03&uppAisTpCd=13&aisTpCd=26&mi=1026",
+      "source_url": "https://apply.lh.or.kr/lhapply/apply/wt/wrtanc/selectWrtancList.do?mi=1026",
+      "fetched_at": "2026-09-13T23:59:39"
+    },
+    "2015122300020713": {
+      "title": "[경기북부] 2026년 하반기 일반 매입임대주택 입주자 모집공고",
+      "posted_on": "2026.09.10",
+      "closes_on": "2026.10.01",
+      "status": "공고중",
+      "source_file": "2026.09.10 LH 경기북부 2026년 하반기 일반 매입임대주택 입주자 모집공고.xlsx",
+      "row_count": 74,
+      "detail_url": "https://apply.lh.or.kr/lhapply/apply/wt/wrtanc/selectWrtancInfo.do?panId=2015122300020713&ccrCnntSysDsCd=03&uppAisTpCd=13&aisTpCd=26&mi=1026",
+      "source_url": "https://apply.lh.or.kr/lhapply/apply/wt/wrtanc/selectWrtancList.do?mi=1026",
+      "fetched_at": "2026-09-13T23:59:41"
+    },
+    "2015122300020711": {
+      "title": "경남 함양군 서하면 다자녀 매입임대주택 예비입주자 모집공고",
+      "posted_on": "2026.09.10",
+      "closes_on": "2026.09.23",
+      "status": "no-housing-list",
+      "notice_status": "접수중",
+      "fetched_at": "2026-09-13T23:59:43"
+    },
+    "2015122300020725": {
+      "title": "[정정공고]26-4차 인천본부 든든전세주택 입주자 모집공고(인천, 부천)",
+      "posted_on": "2026.09.09",
+      "closes_on": "2026.09.22",
+      "status": "공고중",
+      "source_file": "2026.09.09 LH 정정공고 26-4차 인천본부 든든전세주택 입주자 모집공고(인천, 부천).xlsx",
+      "row_count": 137,
+      "detail_url": "https://apply.lh.or.kr/lhapply/apply/wt/wrtanc/selectWrtancInfo.do?panId=2015122300020725&ccrCnntSysDsCd=03&uppAisTpCd=13&aisTpCd=26&mi=1026",
+      "source_url": "https://apply.lh.or.kr/lhapply/apply/wt/wrtanc/selectWrtancList.do?mi=1026",
+      "fetched_at": "2026-09-13T23:59:45"
+    },
+    "2015122300020715": {
+      "title": "26-4차 인천본부 든든전세주택 입주자 모집공고(인천, 부천)",
+      "posted_on": "2026.09.09",
+      "closes_on": "2026.09.22",
+      "status": "정정공고중",
+      "source_file": "2026.09.09 LH 26-4차 인천본부 든든전세주택 입주자 모집공고(인천, 부천).xlsx",
+      "row_count": 137,
+      "detail_url": "https://apply.lh.or.kr/lhapply/apply/wt/wrtanc/selectWrtancInfo.do?panId=2015122300020715&ccrCnntSysDsCd=03&uppAisTpCd=13&aisTpCd=26&mi=1026",
+      "source_url": "https://apply.lh.or.kr/lhapply/apply/wt/wrtanc/selectWrtancList.do?mi=1026",
+      "fetched_at": "2026-09-13T23:59:48"
+    },
+    "2015122300020705": {
+      "title": "[전남광주통합특별시] 기존주택 등 매입임대주택 예비입주자 모집 공고",
+      "posted_on": "2026.09.09",
+      "closes_on": "2026.09.23",
+      "status": "공고중",
+      "source_file": "2026.09.09 LH 전남광주통합특별시 기존주택 등 매입임대주택 예비입주자 모집 공고.xlsx",
+      "row_count": 145,
+      "detail_url": "https://apply.lh.or.kr/lhapply/apply/wt/wrtanc/selectWrtancInfo.do?panId=2015122300020705&ccrCnntSysDsCd=03&uppAisTpCd=13&aisTpCd=26&mi=1026",
+      "source_url": "https://apply.lh.or.kr/lhapply/apply/wt/wrtanc/selectWrtancList.do?mi=1026",
+      "fetched_at": "2026-09-13T23:59:51"
     }
   },
-  "updated_at": "2026-09-07T14:08:47",
+  "updated_at": "2026-09-13T23:59:51",
   "schedules_by_source_file": {
     "2026.09.09 LH 경남지역본부 일반 매입임대주택 입주자 모집 공고(김해시, 밀양시).xlsx": {
       "posted_on": "2026.09.09",
