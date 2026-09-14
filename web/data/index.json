@@ -409,6 +409,21 @@
       "scheduleStatus": "마감"
     },
     {
+      "id": "2026.08.28-SH-(수정)-2026년-2차-장기미임대-매입임대주택-입주자모집공고(2026.-8.-28.)",
+      "year": "2026",
+      "company": "SH",
+      "title": "(수정) 2026년 2차 장기미임대 매입임대주택 입주자모집공고(2026. 8. 28.)",
+      "sourceFile": "2026.08.28 SH (수정) 2026년 2차 장기미임대 매입임대주택 입주자모집공고(2026. 8. 28.).xlsx",
+      "dataFile": "data/2026.08.28-SH-(수정)-2026년-2차-장기미임대-매입임대주택-입주자모집공고(2026.-8.-28.).json",
+      "kind": "standard",
+      "rowCount": 436,
+      "regions": "서울특별시",
+      "postedOn": "2026-08-28",
+      "applyStart": "2026-08-28",
+      "detailUrl": "https://www.i-sh.co.kr/main/lay2/program/S1T297C4476/www/brd/m_247/view.do?multi_itm_seq=2&seq=310107",
+      "scheduleStatus": "진행중"
+    },
+    {
       "id": "2026.08.28-LH-경북-포항,경주,영천-일반-매입임대-입주자-모집공고",
       "year": "2026",
       "company": "LH",

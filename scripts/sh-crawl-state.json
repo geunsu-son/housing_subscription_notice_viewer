@@ -347,7 +347,28 @@
         "[주택현황] 원서동 24 외1.pdf"
       ],
       "fetched_at": "2026-09-07T15:28:32"
+    },
+    "310107": {
+      "title": "(수정) 2026년 2차 장기미임대 매입임대주택 입주자모집공고(2026. 8. 28.)",
+      "posted_on": "2026-08-28",
+      "posted_on_announcement": "2026-08-28",
+      "apply_start": null,
+      "apply_end": null,
+      "source_file": "2026.08.28 SH (수정) 2026년 2차 장기미임대 매입임대주택 입주자모집공고(2026. 8. 28.).xlsx",
+      "row_count": 436,
+      "detail_url": "https://www.i-sh.co.kr/main/lay2/program/S1T297C4476/www/brd/m_247/view.do?multi_itm_seq=2&seq=310107",
+      "source_url": "https://www.i-sh.co.kr/main/lay2/program/S1T297C4476/www/brd/m_247/list.do?multi_itm_seq=2",
+      "fetched_at": "2026-09-14T00:20:55"
+    },
+    "309802": {
+      "title": "[청년형] 특화형 매입임대주택(금천구) 입주자 모집 공고(운영기관 : 한지붕 협동조합)",
+      "posted_on": "2026-09-10",
+      "status": "no-housing-list",
+      "files": [
+        "[한지붕협동조합]SH특화형 매입임대주택(청년) 입주자 모집 공고문_20260910.pdf"
+      ],
+      "fetched_at": "2026-09-14T00:20:56"
     }
   },
-  "updated_at": "2026-09-07T15:28:32"
+  "updated_at": "2026-09-14T00:20:56"
 }
